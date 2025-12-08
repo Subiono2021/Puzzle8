@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>8-Puzzle Game - Teori Grup</title>
-	
-	<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>
@@ -15,7 +15,7 @@
       }
     };
     </script>
-	
+    
     <style>
         :root {
             --primary: #3498db;
@@ -23,6 +23,7 @@
             --accent: #e74c3c;
             --dark: #2c3e50;
             --light: #ecf0f1;
+            --balloon-colors: #FF6B6B, #4ECDC4, #FFD166, #06D6A0, #118AB2, #EF476F, #FF9A76, #7BC950, #FFD3BA, #A0E7E5;
         }
         
         * {
@@ -37,6 +38,7 @@
             color: var(--dark);
             line-height: 1.6;
             padding: 20px;
+            overflow-x: hidden;
         }
         
         .container {
@@ -46,6 +48,8 @@
             border-radius: 12px;
             padding: 2rem;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 1;
         }
         
         h1 {
@@ -344,6 +348,7 @@
             text-align: center;
         }
         
+        /* PERBAIKAN: Deskripsi dengan scrollbar */
         .description-content {
             max-height: 0;
             overflow: hidden;
@@ -351,7 +356,28 @@
         }
         
         .description-content.show {
-            max-height: 1000px;
+            max-height: 400px; /* Tinggi maksimum untuk scroll */
+            overflow-y: auto; /* Menambahkan scrollbar vertikal */
+            padding-right: 10px; /* Memberi ruang untuk scrollbar */
+        }
+        
+        /* Styling untuk scrollbar */
+        .description-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .description-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .description-content::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        .description-content::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
         }
         
         ul {
@@ -368,6 +394,19 @@
             padding: 2px 4px;
             border-radius: 3px;
             font-family: monospace;
+        }
+        
+        .math-explanation {
+            background-color: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .math-explanation h4 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
         }
         
         .loading {
@@ -413,6 +452,7 @@
             100% { transform: scale(1); }
         }
         
+        /* Konfeti untuk versi cepat */
         .confetti {
             position: absolute;
             width: 10px;
@@ -430,6 +470,82 @@
             }
             100% {
                 transform: translateY(500px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Balon warna-warni - DIPERBAIKI */
+        .balloon {
+            position: fixed;
+            width: 40px;
+            height: 50px;
+            border-radius: 50%;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0.9;
+            transform: translateY(100vh);
+            animation-timing-function: ease-out;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2);
+        }
+        
+        .balloon:before {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            width: 2px;
+            height: 15px;
+            background-color: rgba(255,255,255,0.7);
+            transform: translateX(-50%);
+        }
+        
+        .balloon:after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            width: 4px;
+            height: 5px;
+            background-color: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            transform: translateX(-50%);
+        }
+        
+        @keyframes balloonFloat {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            10% {
+                transform: translateY(90vh) translateX(10px) rotate(5deg);
+            }
+            20% {
+                transform: translateY(80vh) translateX(-10px) rotate(-5deg);
+            }
+            30% {
+                transform: translateY(70vh) translateX(15px) rotate(7deg);
+            }
+            40% {
+                transform: translateY(60vh) translateX(-15px) rotate(-7deg);
+            }
+            50% {
+                transform: translateY(50vh) translateX(10px) rotate(5deg);
+            }
+            60% {
+                transform: translateY(40vh) translateX(-10px) rotate(-5deg);
+            }
+            70% {
+                transform: translateY(30vh) translateX(5px) rotate(3deg);
+            }
+            80% {
+                transform: translateY(20vh) translateX(-5px) rotate(-3deg);
+            }
+            90% {
+                transform: translateY(10vh) translateX(2px) rotate(1deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100px) translateX(0) rotate(0deg);
                 opacity: 0;
             }
         }
@@ -491,6 +607,43 @@
             width: 0%;
         }
         
+        .celebration-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 3rem;
+            font-weight: bold;
+            color: #FF6B6B;
+            z-index: 1001;
+            pointer-events: none;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: textPop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        @keyframes textPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            70% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .celebration-text span {
+            display: block;
+            font-size: 1.5rem;
+            color: #3498db;
+            margin-top: 10px;
+        }
+        
         @media (max-width: 600px) {
             .puzzle-container {
                 width: 250px;
@@ -534,6 +687,14 @@
                 flex-direction: column;
                 text-align: center;
             }
+            
+            .celebration-text {
+                font-size: 2rem;
+            }
+            
+            .celebration-text span {
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -547,14 +708,52 @@
         
         <div class="description-content" id="description-content">
             <h2>Deskripsi Program</h2>
-			<button><p>This work has benefited from discussions and collaborative engagement with <b>DeepSeek</b>, <b>ChatGPT</b> and <b>Google Gemini</b>, whose contributions are gratefully acknowledged.</p></button>
-			<br>
-			<hr>
-			<br>
+            <p>This work has benefited from discussions and collaborative engagement with <b>DeepSeek</b>, <b>ChatGPT</b> and <b>Google Gemini</b>, whose contributions are gratefully acknowledged.</p>
+            <br>
+            <hr>
+            <br>
             <p>
                 Program ini adalah permainan <strong>8-Puzzle</strong>, di mana pengguna harus menyusun angka 1-8
-                pada sebuah grid <button>$3\times 3$</button> sehingga posisi kosong (0) berada di akhir.
+                pada sebuah grid $3\times 3$ sehingga posisi kosong (0) berada di akhir.
             </p>
+            
+            <div class="math-explanation">
+                <h4>Fondasi Matematika: Permutasi Genap dan Teori Grup</h4>
+                <p>Dalam 8-puzzle, <strong>permutasi genap</strong> memainkan peran penting dalam menentukan apakah suatu konfigurasi puzzle dapat diselesaikan:</p>
+                
+                <p><strong>1. Konsep Inversi:</strong></p>
+                <p>Sebuah inversi terjadi ketika sebuah angka yang lebih besar mendahului angka yang lebih kecil dalam urutan barisan (tidak termasuk angka 0/kotak kosong).</p>
+                
+                <p><strong>2. Paritas Permutasi:</strong></p>
+                <p>Permutasi dapat diklasifikasikan sebagai <em>genap</em> atau <em>ganjil</em> berdasarkan jumlah inversinya:</p>
+                <ul>
+                    <li>Permutasi <strong>genap</strong>: jumlah inversinya genap</li>
+                    <li>Permutasi <strong>ganjil</strong>: jumlah inversinya ganjil</li>
+                </ul>
+                
+                <p><strong>3. Teorema Solvabilitas 8-Puzzle:</strong></p>
+                <p>Sebuah konfigurasi 8-puzzle dapat diselesaikan jika dan hanya jika:</p>
+                <p style="text-align: center;">$\text{(jumlah inversi)} + \text{(jarak baris kotak kosong dari bawah)}$ adalah <strong>genap</strong></p>
+                <p>Untuk grid $3 \times 3$ (lebar ganjil), cukup dengan memeriksa apakah jumlah inversinya genap.</p>
+                
+                <p><strong>4. Koneksi dengan Teori Grup:</strong></p>
+                <p>Setiap konfigurasi 8-puzzle dapat dipandang sebagai permutasi dari 9 elemen (angka 1-8 dan kotak kosong). Setiap langkah permainan adalah transposisi antara kotak kosong dan angka yang bersebelahan, yang merupakan permutasi ganjil. Karena:</p>
+                <ul>
+                    <li>Konfigurasi awal adalah identitas (permutasi genap)</li>
+                    <li>Setiap langkah mengubah paritas permutasi</li>
+                    <li>Untuk kembali ke identitas, dibutuhkan jumlah langkah genap</li>
+                </ul>
+                <p>Maka hanya <strong>permutasi genap</strong> dari 9 elemen yang dapat dicapai. Dalam teori grup, himpunan permutasi genap membentuk <strong>grup alternasi $A_9$</strong>, subgrup dari grup simetri $S_9$.</p>
+                
+                <p><strong>5. Implikasi dalam Program:</strong></p>
+                <p>Program ini menggunakan konsep permutasi genap untuk:</p>
+                <ul>
+                    <li>Memastikan puzzle yang dihasilkan acak dapat diselesaikan (anggota $A_9$)</li>
+                    <li>Memvalidasi input pengguna</li>
+                    <li>Memberikan informasi tentang solvabilitas puzzle berdasarkan paritas inversi</li>
+                </ul>
+            </div>
+            
             <p><strong>Fitur Utama:</strong></p>
             <ul>
                 <li><strong>Solvabilitas Puzzle:</strong> Memastikan puzzle dapat diselesaikan berdasarkan jumlah inversi genap/ganjil (permutasi genap/ganjil).</li>
@@ -564,6 +763,7 @@
                 <li><b>Animasi Smooth:</b> Transisi dan animasi yang halus untuk pengalaman pengguna yang lebih baik.</li>
                 <li><b>Informasi Penyelesaian:</b> Menampilkan jumlah langkah yang dilakukan solver otomatis.</li>
                 <li><b>Counter Langkah Animasi:</b> Animasi counter yang menunjukkan perkembangan langkah penyelesaian.</li>
+                <li><b>Efek Balon Warna-warni:</b> Ketika puzzle selesai, balon warna-warni akan muncul untuk memberikan semangat.</li>
                 <li><b>Deskripsi program dan tampilan puzzle</b>: Menggunakan elemen HTML dan CSS.</li>
                 <li><b>Kecepatan animasi</b>: Langkah dapat diatur menggunakan slider.</li>
             </ul>
@@ -571,20 +771,20 @@
             <h3>Antarmuka Interaktif</h3>
             <ol>
                 <li><b>Toggle Deskripsi</b>: Tombol untuk menampilkan atau menyembunyikan deskripsi program.</li>
-                <li><b>Grid Puzzle</b>: Menampilkan puzzle dalam format grid <button>$3\times 3$</button> dengan tile yang dapat digeser.</li>
+                <li><b>Grid Puzzle</b>: Menampilkan puzzle dalam format grid $3\times 3$ dengan tile yang dapat digeser.</li>
                 <li><b>Input Pengguna</b>:
                     <ul>
-                        <li><b>ToggleButtons</b>: Pilihan antara input <button style="padding: 0.3rem 0.7rem; font-size: 0.9rem;">Puzzle Acak</button> atau <button style="padding: 0.3rem 0.7rem; font-size: 0.9rem;">Puzzle Mandiri</button>.</li>
+                        <li><b>ToggleButtons</b>: Pilihan antara input <span class="button-example">Puzzle Acak</span> atau <span class="button-example">Puzzle Mandiri</span>.</li>
                         <li><b>Text Input</b>: Untuk memasukkan puzzle secara mandiri/manual.</li>
                         <li><b>Slider</b>: Untuk mengatur kecepatan animasi.</li>
-                        <li>Button <button style="padding: 0.3rem 0.7rem; font-size: 0.9rem;">Start Game</button>: Untuk menjalankan permainan.</li>
+                        <li>Button <span class="button-example">Start Game</span>: Untuk menjalankan permainan.</li>
                     </ul>
                 </li>
             </ol>
             
             <p><strong>Contoh Puzzle:</strong></p>
-            <p><strong>Solvable:</strong> [1, 2, 3, 4, 5, 6, 0, 7, 8]</p>
-            <p><strong>Unsolvable:</strong> [1, 2, 3, 4, 5, 6, 8, 7, 0]</p>
+            <p><strong>Solvable:</strong> [1, 2, 3, 4, 5, 6, 0, 7, 8] (Inversi: 1, genap)</p>
+            <p><strong>Unsolvable:</strong> [1, 2, 3, 4, 5, 6, 8, 7, 0] (Inversi: 1, ganjil)</p>
         </div>
         
         <div class="section">
@@ -666,6 +866,7 @@
         let dragStartTile = null;
         let totalSolutionSteps = 0;
         let currentSolutionStep = 0;
+        let balloonsActive = false;
 
         // Elemen DOM
         const puzzleContainer = document.getElementById('puzzle-container');
@@ -694,11 +895,31 @@
         const totalSteps = document.getElementById('total-steps');
         const progressBar = document.getElementById('progress-bar');
 
+        // Warna-warni untuk balon
+        const balloonColors = ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2', 
+                               '#EF476F', '#FF9A76', '#7BC950', '#FFD3BA', '#A0E7E5'];
+
         // Inisialisasi
         document.addEventListener('DOMContentLoaded', function() {
             renderPuzzle(currentPuzzle);
             setupEventListeners();
             updateSolvabilityInfo();
+            
+            // Tambahkan styling untuk contoh button dalam deskripsi
+            const style = document.createElement('style');
+            style.textContent = `
+                .button-example {
+                    display: inline-block;
+                    background-color: #3498db;
+                    color: white;
+                    padding: 0.2rem 0.7rem;
+                    border-radius: 15px;
+                    font-size: 0.9rem;
+                    margin: 0 2px;
+                    font-weight: 600;
+                }
+            `;
+            document.head.appendChild(style);
         });
 
         // Setup event listeners
@@ -797,7 +1018,7 @@
                                 showMessage('Selamat! Puzzle berhasil diselesaikan!', 'success');
                                 solvePuzzleBtn.disabled = true;
                                 hintBtn.disabled = true;
-                                createConfetti();
+                                createCelebration();
                             }
                         }, 400);
                     }
@@ -835,28 +1056,107 @@
             }
         }
 
-        // Buat efek confetti
-        function createConfetti() {
+        // Buat efek balon warna-warni yang muncul lebih lama - DIPERBAIKI
+        function createBalloons() {
+            if (balloonsActive) return;
+            
+            balloonsActive = true;
+            const balloonCount = 30; // Jumlah balon yang lebih banyak
+            const containerWidth = window.innerWidth;
+            
+            for (let i = 0; i < balloonCount; i++) {
+                setTimeout(() => {
+                    createSingleBalloon(containerWidth);
+                }, i * 200); // Balon muncul secara bertahap
+            }
+            
+            // Reset status balon setelah selesai
+            setTimeout(() => {
+                balloonsActive = false;
+            }, 15000);
+        }
+        
+        // Buat satu balon - DIPERBAIKI (typo diperbaiki)
+        function createSingleBalloon(containerWidth) {
+            const balloon = document.createElement('div');
+            balloon.className = 'balloon';
+            
+            // Pilih warna acak
+            const color = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+            balloon.style.backgroundColor = color;
+            
+            // Ukuran acak
+            const size = 30 + Math.random() * 30;
+            balloon.style.width = `${size}px`;
+            balloon.style.height = `${size * 1.2}px`;
+            
+            // Posisi horizontal acak
+            const left = Math.random() * containerWidth;
+            balloon.style.left = `${left}px`;
+            
+            // Durasi animasi yang lebih lama
+            const duration = 8 + Math.random() * 7; // 8-15 detik
+            balloon.style.animation = `balloonFloat ${duration}s linear forwards`;
+            
+            document.body.appendChild(balloon);
+            
+            // Hapus balon setelah animasi selesai
+            setTimeout(() => {
+                if (balloon.parentNode) {
+                    balloon.parentNode.removeChild(balloon);
+                }
+            }, duration * 1000);
+        }
+
+        // Buat teks perayaan
+        function createCelebrationText() {
+            const celebrationText = document.createElement('div');
+            celebrationText.className = 'celebration-text';
+            celebrationText.innerHTML = 'SELAMAT!<span>Puzzle terselesaikan!</span>';
+            
+            document.body.appendChild(celebrationText);
+            
+            // Hapus teks setelah animasi selesai
+            setTimeout(() => {
+                if (celebrationText.parentNode) {
+                    celebrationText.parentNode.removeChild(celebrationText);
+                }
+            }, 3000);
+        }
+
+        // Buat efek konfeti cepat
+        function createQuickConfetti() {
             const container = document.querySelector('.container');
-            for (let i = 0; i < 50; i++) {
+            const confettiCount = 30;
+            
+            for (let i = 0; i < confettiCount; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
                 confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.backgroundColor = getRandomColor();
-                confetti.style.animationDelay = Math.random() * 2 + 's';
+                confetti.style.backgroundColor = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
                 container.appendChild(confetti);
                 
                 // Hapus confetti setelah animasi selesai
                 setTimeout(() => {
                     confetti.remove();
-                }, 3000);
+                }, 2000);
             }
         }
 
-        // Dapatkan warna acak
-        function getRandomColor() {
-            const colors = ['#3498db', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#1abc9c', '#d35400'];
-            return colors[Math.floor(Math.random() * colors.length)];
+        // Gabungkan semua efek perayaan
+        function createCelebration() {
+            // Tampilkan teks perayaan
+            createCelebrationText();
+            
+            // Tampilkan konfeti cepat
+            createQuickConfetti();
+            
+            // Tampilkan balon yang bertahan lama
+            createBalloons();
+            
+            // Tambahkan efek suara jika diinginkan (opsional)
+            // playCelebrationSound();
         }
 
         // Toggle deskripsi program
@@ -909,7 +1209,7 @@
                         showMessage('Selamat! Puzzle berhasil diselesaikan!', 'success');
                         solvePuzzleBtn.disabled = true;
                         hintBtn.disabled = true;
-                        createConfetti();
+                        createCelebration();
                     }
                 }, 400);
             }
@@ -1186,7 +1486,7 @@
                 resetSolveButton();
                 showMessage(`Puzzle berhasil diselesaikan dalam ${totalSolutionSteps} langkah!`, 'success');
                 hintBtn.disabled = true;
-                createConfetti();
+                createCelebration();
                 return;
             }
             
@@ -1241,7 +1541,7 @@
                             showMessage('Selamat! Puzzle berhasil diselesaikan!', 'success');
                             solvePuzzleBtn.disabled = true;
                             hintBtn.disabled = true;
-                            createConfetti();
+                            createCelebration();
                         }
                     }, 400);
                 }
