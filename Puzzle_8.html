@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8-Puzzle Game - Teori Grup</title>
+    <title>8-Puzzle Game - Teori Grup dengan Gambar</title>
     
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
@@ -102,6 +102,23 @@
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             position: relative;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-size: 300% 300%;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow: hidden;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .tile.has-image {
+            background-size: 300% 300%;
+            color: white;
+            text-shadow: 
+                -1px -1px 0 #000,
+                1px -1px 0 #000,
+                -1px 1px 0 #000,
+                1px 1px 0 #000,
+                0 0 10px rgba(0,0,0,0.8);
+            font-weight: 800;
         }
         
         .tile:hover {
@@ -168,6 +185,12 @@
             transition: all 0.3s ease;
         }
         
+        .empty.has-image {
+            background-color: transparent;
+            background-size: 300% 300%;
+            color: rgba(255,255,255,0.9);
+        }
+        
         .empty.highlight {
             background-color: rgba(46, 204, 113, 0.3);
             box-shadow: 0 0 0 2px var(--secondary);
@@ -176,6 +199,10 @@
         .empty:hover {
             background-color: var(--light);
             transform: none;
+        }
+        
+        .empty.has-image:hover {
+            background-color: transparent;
         }
         
         .controls {
@@ -253,6 +280,20 @@
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        input[type="file"]:hover {
+            border-color: var(--primary);
         }
         
         .slider-container {
@@ -348,7 +389,6 @@
             text-align: center;
         }
         
-        /* PERBAIKAN: Deskripsi dengan scrollbar */
         .description-content {
             max-height: 0;
             overflow: hidden;
@@ -356,12 +396,11 @@
         }
         
         .description-content.show {
-            max-height: 400px; /* Tinggi maksimum untuk scroll */
-            overflow-y: auto; /* Menambahkan scrollbar vertikal */
-            padding-right: 10px; /* Memberi ruang untuk scrollbar */
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
         }
         
-        /* Styling untuk scrollbar */
         .description-content::-webkit-scrollbar {
             width: 8px;
         }
@@ -452,7 +491,6 @@
             100% { transform: scale(1); }
         }
         
-        /* Konfeti untuk versi cepat */
         .confetti {
             position: absolute;
             width: 10px;
@@ -474,7 +512,6 @@
             }
         }
         
-        /* Balon warna-warni - DIPERBAIKI */
         .balloon {
             position: fixed;
             width: 40px;
@@ -644,6 +681,196 @@
             margin-top: 10px;
         }
         
+        .image-preview {
+            margin-top: 0.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+        
+        /* Style untuk angka di atas gambar */
+        .tile span.number-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 
+                -2px -2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000,
+                2px 2px 0 #000,
+                0 0 15px rgba(0,0,0,0.9);
+            background-color: rgba(0,0,0,0.3);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+
+        /* Dropdown Manfaat Pendidikan */
+        .dropdown-section {
+            margin: 20px 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .dropdown-header {
+            width: 100%;
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border: none;
+            text-align: left;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown-header:hover {
+            background-color: #e9ecef;
+        }
+
+        .dropdown-header i {
+            transition: transform 0.3s ease;
+        }
+
+        .dropdown-header.active i {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+            background-color: white;
+        }
+
+        .dropdown-content.show {
+            max-height: 2000px;
+            transition: max-height 0.8s ease-in;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .benefit-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid;
+            transition: transform 0.2s ease;
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .benefit-card.cognitive { border-left-color: #FF6B6B; }
+        .benefit-card.math { border-left-color: #4ECDC4; }
+        .benefit-card.memory { border-left-color: #FFD166; }
+        .benefit-card.educational { border-left-color: #06D6A0; }
+
+        .benefit-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .benefit-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .benefit-list li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .benefit-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .age-group {
+            padding: 0 20px 20px;
+        }
+
+        .age-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .age-benefits {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .age-item {
+            background-color: #f0f7ff;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .age-item h4 {
+            color: #3498db;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .age-item p {
+            font-size: 0.9rem;
+            color: #555;
+            margin: 0;
+        }
+
+        .conclusion {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0 20px 20px;
+            border-radius: 8px;
+        }
+
+        .conclusion p {
+            margin: 0;
+            color: white;
+        }
+
+        .conclusion em {
+            color: rgba(255,255,255,0.9);
+        }
+
         @media (max-width: 600px) {
             .puzzle-container {
                 width: 250px;
@@ -695,15 +922,133 @@
             .celebration-text span {
                 font-size: 1.2rem;
             }
+
+            .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .age-benefits {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>8-Puzzle Game dengan Teori Grup</h1>
+        <h1>BiMath: Permainan 8-Puzzle Menggunakan Teori Grup</h1>
         
         <div class="toggle-description">
             <button id="toggle-description-btn">Tampilkan Deskripsi Program</button>
+        </div>
+        
+        <!-- Dropdown Manfaat Pendidikan -->
+        <div class="dropdown-section">
+            <button class="dropdown-header" id="educationDropdownBtn">
+                <span>📚 Manfaat Pendidikan untuk Perkembangan Anak</span>
+                <i>▼</i>
+            </button>
+            <div class="dropdown-content" id="educationDropdownContent">
+                <div class="benefits-grid">
+                    <!-- Kognitif -->
+                    <div class="benefit-card cognitive">
+                        <div class="benefit-title">
+                            <span>🧠</span> Pengembangan Kognitif
+                        </div>
+                        <ul class="benefit-list">
+                            <li>Pemecahan masalah (problem solving)</li>
+                            <li>Perencanaan strategis beberapa langkah ke depan</li>
+                            <li>Berpikir logis dan sebab-akibat</li>
+                            <li>Pengenalan pola dan keteraturan</li>
+                            <li>Fleksibilitas kognitif - mencoba strategi berbeda</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Matematika -->
+                    <div class="benefit-card math">
+                        <div class="benefit-title">
+                            <span>🔢</span> Pengembangan Matematika
+                        </div>
+                        <ul class="benefit-list">
+                            <li>Konsep inversi dan permutasi genap</li>
+                            <li>Berpikir algoritmik dan sistematis</li>
+                            <li>Spatial reasoning (pemahaman ruang)</li>
+                            <li>Pengenalan angka 1-8 dan urutannya</li>
+                            <li>Fondasi teori grup secara intuitif</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Memori -->
+                    <div class="benefit-card memory">
+                        <div class="benefit-title">
+                            <span>💭</span> Pengembangan Memori
+                        </div>
+                        <ul class="benefit-list">
+                            <li>Memori jangka pendek - posisi tile</li>
+                            <li>Memori visual - potongan gambar</li>
+                            <li>Memori kerja - perencanaan langkah</li>
+                            <li>Mengingat pola dan strategi</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Keterampilan Eksekutif -->
+                    <div class="benefit-card educational">
+                        <div class="benefit-title">
+                            <span>🎯</span> Keterampilan Eksekutif
+                        </div>
+                        <ul class="benefit-list">
+                            <li>Konsentrasi dan fokus yang meningkat</li>
+                            <li>Kesabaran dalam menyelesaikan tugas</li>
+                            <li>Inhibisi - menahan tindakan impulsif</li>
+                            <li>Fleksibilitas mengubah strategi</li>
+                            <li>Ketelitian dalam mengamati detail</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Manfaat per Kelompok Usia -->
+                <div class="age-group">
+                    <div class="age-title">🎯 Manfaat Spesifik per Kelompok Usia</div>
+                    <div class="age-benefits">
+                        <div class="age-item">
+                            <h4>Usia 4-6 Tahun (TK)</h4>
+                            <p>Pengenalan angka 1-8, koordinasi mata-tangan, konsep "kosong", melatih kesabaran</p>
+                        </div>
+                        <div class="age-item">
+                            <h4>Usia 7-9 Tahun (SD Kelas 1-3)</h4>
+                            <p>Memahami urutan dan pola, merencanakan langkah sederhana, mengenal inversi secara intuitif</p>
+                        </div>
+                        <div class="age-item">
+                            <h4>Usia 10-12 Tahun (SD Kelas 4-6)</h4>
+                            <p>Memahami solvabilitas puzzle, belajar algoritma, mengembangkan strategi efisien</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Manfaat Fitur Khusus -->
+                <div style="padding: 0 1.5rem 1rem;">
+                    <h4 style="color: var(--primary); margin-bottom: 0.5rem;">✨ Manfaat dari Fitur Khusus</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.8rem;">
+                        <div style="background-color: #f0f7ff; padding: 0.8rem; border-radius: 6px;">
+                            <strong>🐱 Gambar Binatang:</strong> Meningkatkan minat belajar, stimulasi visual
+                        </div>
+                        <div style="background-color: #f0f7ff; padding: 0.8rem; border-radius: 6px;">
+                            <strong>📁 Upload Gambar:</strong> Personalisasi, kreativitas, rasa memiliki
+                        </div>
+                        <div style="background-color: #f0f7ff; padding: 0.8rem; border-radius: 6px;">
+                            <strong>🎲 Puzzle Acak:</strong> Variasi tantangan, belajar dari kesalahan
+                        </div>
+                        <div style="background-color: #f0f7ff; padding: 0.8rem; border-radius: 6px;">
+                            <strong>💡 Fitur Bantuan:</strong> Belajar dari contoh, tidak mudah frustrasi
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Kesimpulan -->
+                <div class="conclusion">
+                    <p><strong>🌟 Dampak Jangka Panjang:</strong> Membangun fondasi matematika, keterampilan belajar mandiri, ketahanan mental, apresiasi seni, dan keterampilan digital.</p>
+                    <p style="margin-top: 0.5rem;"><em>"Bermain puzzle ini bukan sekadar hiburan, tetapi investasi untuk kecerdasan anak di masa depan."</em></p>
+                </div>
+            </div>
         </div>
         
         <div class="description-content" id="description-content">
@@ -760,6 +1105,9 @@
                 <li><strong>Penyelesaian Puzzle:</strong> Menggunakan algoritma BFS yang dioptimalkan untuk menemukan solusi.</li>
                 <li><strong>Input Interaktif:</strong> Pilihan untuk menghasilkan puzzle acak atau memasukkan puzzle sendiri.</li>
                 <li><b>Kontrol Mouse Lengkap:</b> Drag & drop untuk memindahkan angka dengan mouse.</li>
+                <li><b>Upload Gambar:</b> Upload gambar dari drive lokal sebagai background puzzle.</li>
+                <li><b>Angka Tetap Tampil:</b> Angka selalu terlihat di atas gambar untuk memudahkan navigasi.</li>
+                <li><b>Gambar Utuh:</b> Saat puzzle terurut, gambar lengkap muncul termasuk kotak kosong (tidak ada angka) digunakan melakukan perpindahan bagian kotak puzzle.</li>
                 <li><b>Animasi Smooth:</b> Transisi dan animasi yang halus untuk pengalaman pengguna yang lebih baik.</li>
                 <li><b>Informasi Penyelesaian:</b> Menampilkan jumlah langkah yang dilakukan solver otomatis.</li>
                 <li><b>Counter Langkah Animasi:</b> Animasi counter yang menunjukkan perkembangan langkah penyelesaian.</li>
@@ -776,6 +1124,7 @@
                     <ul>
                         <li><b>ToggleButtons</b>: Pilihan antara input <span class="button-example">Puzzle Acak</span> atau <span class="button-example">Puzzle Mandiri</span>.</li>
                         <li><b>Text Input</b>: Untuk memasukkan puzzle secara mandiri/manual.</li>
+                        <li><b>Upload Gambar</b>: Untuk memilih gambar dari drive lokal.</li>
                         <li><b>Slider</b>: Untuk mengatur kecepatan animasi.</li>
                         <li>Button <span class="button-example">Start Game</span>: Untuk menjalankan permainan.</li>
                     </ul>
@@ -798,7 +1147,7 @@
             </div>
             
             <div class="instructions">
-                <p><strong>Cara Bermain:</strong> Klik atau drag angka untuk memindahkannya ke kotak kosong yang bersebelahan</p>
+                <p><strong>Cara Bermain:</strong> Klik atau drag angka untuk memindahkannya ke kotak kosong/gambar tidak ada angka yang bersebelahan</p>
             </div>
             
             <div class="solution-info" id="solution-info" style="display: none;">
@@ -827,6 +1176,12 @@
                 <div class="input-group" id="custom-input-container" style="display: none;">
                     <label for="custom-puzzle-input">Masukkan Puzzle (contoh: 1 2 3 4 5 6 0 7 8):</label>
                     <input type="text" id="custom-puzzle-input" placeholder="1 2 3 4 5 6 0 7 8">
+                </div>
+                
+                <div class="input-group">
+                    <label for="image-upload">Upload Gambar Puzzle:</label>
+                    <input type="file" id="image-upload" accept="image/*">
+                    <div class="image-preview" id="image-preview"></div>
                 </div>
                 
                 <div class="slider-container">
@@ -867,6 +1222,8 @@
         let totalSolutionSteps = 0;
         let currentSolutionStep = 0;
         let balloonsActive = false;
+        let puzzleImage = null;
+        let imageDataUrl = null;
 
         // Elemen DOM
         const puzzleContainer = document.getElementById('puzzle-container');
@@ -894,6 +1251,12 @@
         const stepCounter = document.getElementById('step-counter');
         const totalSteps = document.getElementById('total-steps');
         const progressBar = document.getElementById('progress-bar');
+        const imageUpload = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('image-preview');
+        
+        // Elemen dropdown pendidikan
+        const educationDropdownBtn = document.getElementById('educationDropdownBtn');
+        const educationDropdownContent = document.getElementById('educationDropdownContent');
 
         // Warna-warni untuk balon
         const balloonColors = ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2', 
@@ -932,10 +1295,15 @@
             hintBtn.addEventListener('click', showHint);
             animationSpeedSlider.addEventListener('input', updateAnimationSpeed);
             toggleDescriptionBtn.addEventListener('click', toggleDescription);
+            imageUpload.addEventListener('change', handleImageUpload);
+            
+            // Event listener untuk dropdown pendidikan
+            educationDropdownBtn.addEventListener('click', toggleEducationDropdown);
             
             // Event delegation untuk tile
             puzzleContainer.addEventListener('click', function(event) {
-                if (event.target.classList.contains('tile') && !event.target.classList.contains('empty')) {
+                const tile = event.target.closest('.tile');
+                if (tile && !tile.classList.contains('empty')) {
                     handleTileClick(event);
                 }
             });
@@ -944,18 +1312,44 @@
             setupDragAndDrop();
         }
 
+        // Toggle dropdown pendidikan
+        function toggleEducationDropdown() {
+            educationDropdownContent.classList.toggle('show');
+            educationDropdownBtn.classList.toggle('active');
+        }
+
+        // Handle upload gambar
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageDataUrl = e.target.result;
+                    imagePreview.textContent = `Gambar: ${file.name}`;
+                    puzzleImage = new Image();
+                    puzzleImage.src = imageDataUrl;
+                    puzzleImage.onload = function() {
+                        renderPuzzle(currentPuzzle);
+                        showMessage('Gambar berhasil diupload!', 'success');
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         // Setup drag and drop functionality
         function setupDragAndDrop() {
             let draggedTile = null;
             
             // Event listener untuk mulai drag
             document.addEventListener('dragstart', function(event) {
-                if (event.target.classList.contains('tile') && !event.target.classList.contains('empty')) {
-                    draggedTile = event.target;
-                    event.target.classList.add('dragging');
+                const tile = event.target.closest('.tile');
+                if (tile && !tile.classList.contains('empty')) {
+                    draggedTile = tile;
+                    tile.classList.add('dragging');
                     
                     // Set data transfer untuk kompatibilitas browser
-                    event.dataTransfer.setData('text/plain', event.target.dataset.index);
+                    event.dataTransfer.setData('text/plain', tile.dataset.index);
                     event.dataTransfer.effectAllowed = 'move';
                 }
             });
@@ -964,7 +1358,7 @@
             document.addEventListener('dragover', function(event) {
                 event.preventDefault();
                 
-                // Hightlight tile yang valid untuk di-drop
+                // Highlight tile yang valid untuk di-drop
                 if (draggedTile) {
                     const emptyIndex = currentPuzzle.indexOf(0);
                     const draggedIndex = parseInt(draggedTile.dataset.index);
@@ -1030,8 +1424,9 @@
             
             // Event listener untuk akhir drag
             document.addEventListener('dragend', function(event) {
-                if (event.target.classList.contains('tile')) {
-                    event.target.classList.remove('dragging');
+                const tile = event.target.closest('.tile');
+                if (tile) {
+                    tile.classList.remove('dragging');
                     
                     // Hapus highlight dari tile kosong
                     const emptyTile = document.querySelector(`.tile.empty`);
@@ -1056,51 +1451,45 @@
             }
         }
 
-        // Buat efek balon warna-warni yang muncul lebih lama - DIPERBAIKI
+        // Buat efek balon warna-warni yang muncul lebih lama
         function createBalloons() {
             if (balloonsActive) return;
             
             balloonsActive = true;
-            const balloonCount = 30; // Jumlah balon yang lebih banyak
+            const balloonCount = 30;
             const containerWidth = window.innerWidth;
             
             for (let i = 0; i < balloonCount; i++) {
                 setTimeout(() => {
                     createSingleBalloon(containerWidth);
-                }, i * 200); // Balon muncul secara bertahap
+                }, i * 200);
             }
             
-            // Reset status balon setelah selesai
             setTimeout(() => {
                 balloonsActive = false;
             }, 15000);
         }
         
-        // Buat satu balon - DIPERBAIKI (typo diperbaiki)
+        // Buat satu balon
         function createSingleBalloon(containerWidth) {
             const balloon = document.createElement('div');
             balloon.className = 'balloon';
             
-            // Pilih warna acak
             const color = balloonColors[Math.floor(Math.random() * balloonColors.length)];
             balloon.style.backgroundColor = color;
             
-            // Ukuran acak
             const size = 30 + Math.random() * 30;
             balloon.style.width = `${size}px`;
             balloon.style.height = `${size * 1.2}px`;
             
-            // Posisi horizontal acak
             const left = Math.random() * containerWidth;
             balloon.style.left = `${left}px`;
             
-            // Durasi animasi yang lebih lama
-            const duration = 8 + Math.random() * 7; // 8-15 detik
+            const duration = 8 + Math.random() * 7;
             balloon.style.animation = `balloonFloat ${duration}s linear forwards`;
             
             document.body.appendChild(balloon);
             
-            // Hapus balon setelah animasi selesai
             setTimeout(() => {
                 if (balloon.parentNode) {
                     balloon.parentNode.removeChild(balloon);
@@ -1116,7 +1505,6 @@
             
             document.body.appendChild(celebrationText);
             
-            // Hapus teks setelah animasi selesai
             setTimeout(() => {
                 if (celebrationText.parentNode) {
                     celebrationText.parentNode.removeChild(celebrationText);
@@ -1137,7 +1525,6 @@
                 confetti.style.animationDelay = Math.random() * 0.5 + 's';
                 container.appendChild(confetti);
                 
-                // Hapus confetti setelah animasi selesai
                 setTimeout(() => {
                     confetti.remove();
                 }, 2000);
@@ -1146,17 +1533,9 @@
 
         // Gabungkan semua efek perayaan
         function createCelebration() {
-            // Tampilkan teks perayaan
             createCelebrationText();
-            
-            // Tampilkan konfeti cepat
             createQuickConfetti();
-            
-            // Tampilkan balon yang bertahan lama
             createBalloons();
-            
-            // Tambahkan efek suara jika diinginkan (opsional)
-            // playCelebrationSound();
         }
 
         // Toggle deskripsi program
@@ -1167,18 +1546,57 @@
                 : 'Tampilkan Deskripsi Program';
         }
 
-        // Render puzzle ke grid
+        // Mendapatkan posisi background untuk tile berdasarkan nilai angka
+        function getBackgroundPosition(value) {
+            // Posisi dalam persentase untuk background-size 300% 300%
+            // Baris 0 (atas): 0% 0%, 50% 0%, 100% 0%
+            // Baris 1 (tengah): 0% 50%, 50% 50%, 100% 50%
+            // Baris 2 (bawah): 0% 100%, 50% 100%, 100% 100%
+            
+            const row = Math.floor((value - 1) / 3);
+            const col = (value - 1) % 3;
+            
+            // Untuk value 0 (kotak kosong) - posisi pojok kanan bawah (baris 2, kolom 2)
+            if (value === 0) {
+                return '100% 100%';
+            }
+            
+            // Hitung posisi berdasarkan baris dan kolom
+            const yPosition = row === 0 ? '0%' : (row === 1 ? '50%' : '100%');
+            const xPosition = col === 0 ? '0%' : (col === 1 ? '50%' : '100%');
+            
+            return `${xPosition} ${yPosition}`;
+        }
+
+        // Render puzzle ke grid dengan gambar jika ada
         function renderPuzzle(puzzle) {
             puzzleContainer.innerHTML = '';
             
             puzzle.forEach((value, index) => {
                 const tile = document.createElement('div');
                 tile.className = value === 0 ? 'tile empty' : 'tile';
+                
+                // Selalu tampilkan angka di dalam tile
                 tile.textContent = value === 0 ? '' : value;
+                
                 tile.dataset.index = index;
                 tile.dataset.value = value;
                 
-                // Tambahkan atribut draggable untuk tile yang tidak kosong
+                // Jika ada gambar yang diupload, atur background
+                if (imageDataUrl) {
+                    tile.classList.add('has-image');
+                    tile.style.backgroundImage = `url('${imageDataUrl}')`;
+                    
+                    // Untuk tile dengan angka, gunakan posisi berdasarkan nilai
+                    // Untuk tile kosong (0), gunakan posisi pojok kanan bawah
+                    if (value === 0) {
+                        // Kotak kosong menampilkan potongan pojok kanan bawah
+                        tile.style.backgroundPosition = '100% 100%';
+                    } else {
+                        tile.style.backgroundPosition = getBackgroundPosition(value);
+                    }
+                }
+                
                 if (value !== 0) {
                     tile.draggable = true;
                 }
@@ -1191,15 +1609,16 @@
         function handleTileClick(event) {
             if (isSolving) return;
             
-            const clickedIndex = parseInt(event.target.dataset.index);
+            const tile = event.target.closest('.tile');
+            if (!tile) return;
+            
+            const clickedIndex = parseInt(tile.dataset.index);
             const emptyIndex = currentPuzzle.indexOf(0);
             
             if (isAdjacent(clickedIndex, emptyIndex)) {
-                // Tambahkan animasi slide
                 const direction = getSlideDirection(clickedIndex, emptyIndex);
-                event.target.classList.add('moving', direction);
+                tile.classList.add('moving', direction);
                 
-                // Tunggu animasi selesai sebelum menukar posisi
                 setTimeout(() => {
                     swapTiles(clickedIndex, emptyIndex);
                     moves++;
@@ -1277,7 +1696,6 @@
             const isVisible = customInputContainer.style.display === 'block';
             customInputContainer.style.display = isVisible ? 'none' : 'block';
             
-            // Reset input jika disembunyikan
             if (isVisible) {
                 customPuzzleInput.value = '';
             }
@@ -1286,7 +1704,6 @@
         // Mulai permainan
         function startGame() {
             if (customInputContainer.style.display === 'block') {
-                // Gunakan puzzle custom
                 try {
                     const input = customPuzzleInput.value.trim();
                     if (!input) {
@@ -1341,10 +1758,8 @@
             solveText.textContent = 'Memproses...';
             solveLoading.style.display = 'inline-block';
             
-            // Gunakan setTimeout untuk mencegah blocking UI
             setTimeout(() => {
                 try {
-                    // Hitung solusi dengan BFS yang dioptimasi
                     solutionPath = bfsSolve(currentPuzzle, TARGET_STATE);
                     
                     if (solutionPath.length === 0) {
@@ -1353,15 +1768,12 @@
                         return;
                     }
                     
-                    // Tampilkan informasi jumlah langkah
                     totalSolutionSteps = solutionPath.length - 1;
                     showSolutionInfo(totalSolutionSteps);
                     
-                    // Reset counter langkah
                     currentSolutionStep = 0;
                     updateCounter(0);
                     
-                    // Animasikan solusi tanpa menampilkan langkah-langkah
                     animateSolution(solutionPath, 0);
                 } catch (error) {
                     console.error('Error during solving:', error);
@@ -1383,13 +1795,11 @@
             currentSolutionStep = step;
             stepCounter.textContent = step;
             
-            // Tambahkan animasi
             stepCounter.classList.add('animating');
             setTimeout(() => {
                 stepCounter.classList.remove('animating');
             }, 500);
             
-            // Update progress bar
             const progressPercentage = (step / totalSolutionSteps) * 100;
             progressBar.style.width = `${progressPercentage}%`;
         }
@@ -1401,7 +1811,6 @@
 
         // Algoritma BFS untuk menyelesaikan puzzle
         function bfsSolve(start, target) {
-            // Cek jika sudah di target
             if (arraysEqual(start, target)) {
                 return [start];
             }
@@ -1413,7 +1822,6 @@
             while (queue.length > 0) {
                 const { state, path } = queue.shift();
                 
-                // Dapatkan semua kemungkinan state berikutnya
                 const nextStates = getNextStates(state);
                 
                 for (const nextState of nextStates) {
@@ -1432,7 +1840,7 @@
                 }
             }
             
-            return []; // Tidak ditemukan solusi
+            return [];
         }
 
         // Dapatkan semua state berikutnya yang mungkin
@@ -1440,28 +1848,24 @@
             const emptyIndex = state.indexOf(0);
             const nextStates = [];
             
-            // Cek pergerakan ke atas
             if (emptyIndex >= 3) {
                 const newState = [...state];
                 [newState[emptyIndex], newState[emptyIndex - 3]] = [newState[emptyIndex - 3], newState[emptyIndex]];
                 nextStates.push(newState);
             }
             
-            // Cek pergerakan ke bawah
             if (emptyIndex < 6) {
                 const newState = [...state];
                 [newState[emptyIndex], newState[emptyIndex + 3]] = [newState[emptyIndex + 3], newState[emptyIndex]];
                 nextStates.push(newState);
             }
             
-            // Cek pergerakan ke kiri
             if (emptyIndex % 3 > 0) {
                 const newState = [...state];
                 [newState[emptyIndex], newState[emptyIndex - 1]] = [newState[emptyIndex - 1], newState[emptyIndex]];
                 nextStates.push(newState);
             }
             
-            // Cek pergerakan ke kanan
             if (emptyIndex % 3 < 2) {
                 const newState = [...state];
                 [newState[emptyIndex], newState[emptyIndex + 1]] = [newState[emptyIndex + 1], newState[emptyIndex]];
@@ -1494,7 +1898,6 @@
             renderPuzzle(currentPuzzle);
             updateStats();
             
-            // Update counter dengan animasi
             updateCounter(stepIndex);
             
             setTimeout(() => {
@@ -1512,31 +1915,25 @@
                 return;
             }
             
-            // Cari solusi untuk puzzle saat ini
             const path = bfsSolve(currentPuzzle, TARGET_STATE);
             
             if (path.length > 1) {
-                // Ambil langkah berikutnya
                 const nextStep = path[1];
                 
-                // Temukan tile yang akan dipindahkan
                 const emptyIndex = currentPuzzle.indexOf(0);
                 const movedIndex = nextStep.indexOf(0);
                 
-                // Tambahkan animasi slide
                 const tileToMove = document.querySelector(`.tile[data-index="${movedIndex}"]`);
                 if (tileToMove) {
                     const direction = getSlideDirection(movedIndex, emptyIndex);
                     tileToMove.classList.add('moving', direction);
                     
-                    // Tunggu animasi selesai sebelum menukar posisi
                     setTimeout(() => {
                         currentPuzzle = [...nextStep];
                         renderPuzzle(currentPuzzle);
                         moves++;
                         updateStats();
                         
-                        // Cek apakah puzzle sudah terselesaikan
                         if (isPuzzleSolved()) {
                             showMessage('Selamat! Puzzle berhasil diselesaikan!', 'success');
                             solvePuzzleBtn.disabled = true;
@@ -1607,7 +2004,6 @@
         function updateStats() {
             movesInfo.textContent = `Langkah: ${moves}`;
             
-            // Tambahkan efek visual saat statistik diperbarui
             statsContainer.classList.add('updated');
             setTimeout(() => {
                 statsContainer.classList.remove('updated');
@@ -1634,7 +2030,6 @@
             messageContainer.className = `message ${type}`;
             messageContainer.classList.add('show');
             
-            // Sembunyikan pesan setelah 5 detik
             setTimeout(() => {
                 hideMessage();
             }, 5000);
