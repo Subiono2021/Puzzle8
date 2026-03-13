@@ -77,13 +77,14 @@
         .puzzle-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-gap: 5px;
-            width: 300px;
-            height: 300px;
+            grid-gap: 1px;
+            width: 310px;
+            height: 310px;
             margin: 0 auto 2rem;
-            border: 2px solid var(--dark);
+            /* Frame garis tipis (1px) dan tidak terlalu tebal */
+            border: 1px solid var(--dark);
             border-radius: 8px;
-            padding: 5px;
+            padding: 2px;
             background-color: var(--dark);
             position: relative;
         }
@@ -120,7 +121,7 @@
                 0 0 10px rgba(0,0,0,0.8);
             font-weight: 800;
             /* Ukuran font lebih kecil untuk tidak mengganggu gambar */
-            font-size: 1rem;
+            font-size: 0.8rem;
         }
         
         .tile:hover {
@@ -383,7 +384,7 @@
         .info {
             background-color: rgba(52, 152, 219, 0.2);
             color: var(--primary);
-            border: 1px solid var(--primary);
+            border: 0.2px solid var(--primary);
         }
         
         .toggle-description {
@@ -604,7 +605,7 @@
             align-items: center;
             gap: 0.5rem;
             margin-top: 0.5rem;
-            font-size: 1.2rem;
+            font-size: 0.75rem;
             font-weight: bold;
         }
         
@@ -719,11 +720,11 @@
         /* Ukuran font lebih kecil untuk mobile */
         @media (max-width: 600px) {
             .tile.has-image {
-                font-size: 1.2rem;
+                font-size: 1rem;
             }
             
             .tile span.number-overlay {
-                font-size: 1.2rem;
+                font-size: 1rem;
             }
         }
 
