@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8-Puzzle Game - Teori Grup dengan Gambar & Fireworks Meriah</title>
+    <title>8-Puzzle Game - Teori Grup dengan Gambar & Fireworks Meriah + Suara Ledakan Keras</title>
     
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>
@@ -600,6 +600,27 @@
             font-weight: bold;
         }
         
+        /* Volume control */
+        .volume-control {
+            background: linear-gradient(135deg, #3498db20, #2ecc7120);
+            padding: 8px 12px;
+            border-radius: 12px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .volume-control label {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+        
+        .volume-control input {
+            width: 120px;
+        }
+        
         @media (max-width: 600px) {
             .puzzle-container { width: 250px; height: 250px; }
             .tile { font-size: 1.5rem; }
@@ -615,6 +636,9 @@
 <body>
     <!-- Canvas untuk Fireworks -->
     <canvas id="fireworks-canvas"></canvas>
+    
+    <!-- Audio untuk suara ledakan (menggunakan Web Audio API) -->
+    <audio id="explosion-sound" preload="auto" style="display: none;"></audio>
     
     <!-- Toast Ucapan Selamat (tidak menutupi full screen) -->
     <div id="congratsToast" class="congrats-toast">
@@ -720,7 +744,7 @@
                 <p style="font-size: 0.9rem; margin-top: 5px;">🎆 <strong>Kembang api 15 detik + toast ucapan selamat hanya saat Anda menyelesaikan sendiri!</strong></p>
             </div>
             
-            <!-- Slider pengatur durasi kembang api -->
+            <!-- Slider pengatur durasi kembang api dan volume suara -->
             <div class="fireworks-control">
                 <div class="slider-container">
                     <label>🎆 Durasi Kembang Api:</label>
@@ -731,6 +755,13 @@
                 <p style="font-size: 0.8rem; text-align: center; margin-top: 5px; color: #e67e22;">
                     ✨ Semakin lama durasi, semakin meriah perayaannya! ✨
                 </p>
+            </div>
+            
+            <!-- Kontrol Volume Suara Ledakan -->
+            <div class="volume-control">
+                <span>🔊 Suara Ledakan:</span>
+                <input type="range" id="sound-volume" min="0" max="100" value="100">
+                <span id="volume-value" class="duration-value" style="background: #3498db;">100%</span>
             </div>
             
             <div class="solution-info" id="solution-info" style="display: none;">
@@ -776,6 +807,111 @@
     </div>
 
     <script>
+        // ==================== SISTEM SUARA LEDAKAN KEMBANG API (DIPERKERAS) ====================
+        let audioContext = null;
+        let masterGain = null;
+        let soundEnabled = true;
+        let currentVolume = 1.0; // Volume maksimal 100%
+        
+        // Inisialisasi Audio Context (dibutuhkan interaksi user, tapi kita inisialisasi saat pertama kali suara diputar)
+        function initAudio() {
+            if (audioContext) return;
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioContext.createGain();
+                masterGain.gain.value = currentVolume;
+                masterGain.connect(audioContext.destination);
+            } catch(e) {
+                console.warn("Web Audio API tidak didukung:", e);
+                soundEnabled = false;
+            }
+        }
+        
+        // Fungsi untuk memainkan suara ledakan (suara realistic seperti kembang api) - DIPERKERAS
+        function playExplosionSound() {
+            if (!soundEnabled) return;
+            if (!audioContext) {
+                initAudio();
+            }
+            if (!audioContext || audioContext.state === 'closed') return;
+            
+            const now = audioContext.currentTime;
+            const duration = 0.5 + Math.random() * 0.4; // 0.5-0.9 detik (lebih panjang)
+            
+            // Gain node untuk envelope - DIPERKERAS (multiplier 1.5)
+            const gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(currentVolume * 1.5, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+            
+            // Filter low-pass untuk efek ledakan yang lebih natural
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 600 + Math.random() * 1000;
+            filter.Q.value = 6;
+            
+            // White noise generator dengan amplitude lebih besar
+            const bufferSize = 4096;
+            const noiseNode = audioContext.createScriptProcessor(bufferSize, 1, 1);
+            noiseNode.onaudioprocess = function(e) {
+                const output = e.outputBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = (Math.random() * 2 - 1) * (1 - Math.random() * 0.3);
+                }
+            };
+            
+            // Oscillator untuk nada rendah (bass boom) - DIPERKERAS
+            const osc = audioContext.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.value = 70 + Math.random() * 80;
+            
+            // Envelope untuk oscillator - DIPERKERAS (multiplier 1.3)
+            const oscGain = audioContext.createGain();
+            oscGain.gain.setValueAtTime(currentVolume * 1.3, now);
+            oscGain.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.7);
+            
+            // Hubungkan node
+            noiseNode.connect(filter);
+            filter.connect(gainNode);
+            osc.connect(oscGain);
+            oscGain.connect(gainNode);
+            gainNode.connect(masterGain);
+            
+            // Play
+            noiseNode.connect(filter);
+            osc.start(now);
+            osc.stop(now + duration);
+            
+            // Cleanup
+            setTimeout(() => {
+                try {
+                    noiseNode.disconnect();
+                    osc.disconnect();
+                } catch(e) {}
+            }, duration * 1000 + 100);
+        }
+        
+        // Fungsi untuk memainkan ledakan besar (untuk efek pertama kali) - DIPERKERAS dengan 5 ledakan
+        function playBigExplosionSound() {
+            if (!soundEnabled) return;
+            // Mainkan 5 suara sekaligus untuk efek besar yang lebih keras
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => playExplosionSound(), i * 60);
+            }
+        }
+        
+        // Update volume suara
+        const volumeSlider = document.getElementById('sound-volume');
+        const volumeValue = document.getElementById('volume-value');
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', () => {
+                currentVolume = volumeSlider.value / 100;
+                volumeValue.textContent = volumeSlider.value + '%';
+                if (masterGain) {
+                    masterGain.gain.value = currentVolume;
+                }
+            });
+        }
+        
         // ==================== KEMBANG API DENGAN DURASI BISA DIATUR ====================
         const fwCanvas = document.getElementById('fireworks-canvas');
         let fwCtx = fwCanvas.getContext('2d');
@@ -785,16 +921,16 @@
         
         // Parameter kembang api yang bisa disesuaikan
         let fireworksDuration = 15000; // Default 15 detik
-        let fireworksDensity = 0.12;   // Kepadatan ledakan (12% per frame)
+        let fireworksDensity = 0.18;   // Kepadatan ledakan lebih padat untuk suara lebih sering
         
         // Elemen slider durasi
         const durationSlider = document.getElementById('fireworks-duration');
-        const durationValue = document.getElementById('duration-value');
+        const durationValueSpan = document.getElementById('duration-value');
         
         if (durationSlider) {
             durationSlider.addEventListener('input', () => {
                 fireworksDuration = parseInt(durationSlider.value) * 1000;
-                durationValue.textContent = durationSlider.value;
+                durationValueSpan.textContent = durationSlider.value;
             });
         }
         
@@ -813,12 +949,15 @@
             const y = Math.random() * fwCanvas.height * 0.6;
             const color = `hsl(${Math.random() * 360}, 85%, 65%)`;
             
-            // Lebih banyak partikel per ledakan (60-110 partikel)
-            const particleCount = 60 + Math.floor(Math.random() * 50);
+            // MAINAN SUARA LEDAKAN SETIAP KEMBANG API MELEDAK
+            playExplosionSound();
+            
+            // Lebih banyak partikel per ledakan (80-130 partikel untuk efek lebih meriah)
+            const particleCount = 80 + Math.floor(Math.random() * 60);
             
             for (let i = 0; i < particleCount; i++) {
                 const angle = (Math.PI * 2 * i) / particleCount;
-                const speed = 2 + Math.random() * 5;
+                const speed = 2.5 + Math.random() * 6;
                 particles.push({
                     x: x, y: y,
                     vx: Math.cos(angle) * speed * (0.5 + Math.random()),
@@ -826,7 +965,7 @@
                     life: 1,
                     maxLife: 1,
                     color: color,
-                    size: 2 + Math.random() * 4
+                    size: 2.5 + Math.random() * 5
                 });
             }
         }
@@ -843,7 +982,7 @@
                 p.x += p.vx;
                 p.y += p.vy;
                 p.vy += 0.08; // Gravitasi
-                p.life -= 0.008; // Partikel lebih awet (0.015 -> 0.008)
+                p.life -= 0.007; // Partikel lebih awet
                 
                 if (p.life <= 0 || p.y > fwCanvas.height + 100 || p.x < -100 || p.x > fwCanvas.width + 100) {
                     particles.splice(i, 1);
@@ -868,6 +1007,13 @@
         
         function startFireworks() {
             if (fwActive) return;
+            
+            // Inisialisasi audio context saat pertama kali suara dimainkan
+            initAudio();
+            
+            // Mainkan suara ledakan besar untuk efek awal yang meriah
+            playBigExplosionSound();
+            
             initFireworksCanvas();
             fwCanvas.style.display = 'block';
             fwActive = true;
@@ -882,7 +1028,7 @@
                     fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
                     fwCanvas.style.display = 'none';
                     fwAnimationId = null;
-                }, 5000); // Partikel terakhir hilang setelah 5 detik
+                }, 5000);
             }, fireworksDuration);
         }
         
@@ -904,10 +1050,8 @@
         let victoryTriggered = false;
         
         function showToastCongrats(moves) {
-            // Update statistik di toast
             document.getElementById('toastMoves').textContent = moves;
             
-            // Tentukan tingkat kesulitan
             let difficulty = '';
             if (moves <= 20) difficulty = '🌟 Luar Biasa!';
             else if (moves <= 50) difficulty = '👍 Bagus Sekali!';
@@ -915,11 +1059,8 @@
             else difficulty = '💪 Tetap Semangat!';
             
             document.getElementById('toastDifficulty').textContent = difficulty;
-            
-            // Tampilkan toast dengan animasi
             congratsToast.classList.add('show');
             
-            // Auto hide setelah 10 detik
             setTimeout(() => {
                 if (congratsToast.classList.contains('show')) {
                     congratsToast.classList.remove('show');
@@ -927,13 +1068,8 @@
             }, 10000);
         }
         
-        function hideToast() {
-            congratsToast.classList.remove('show');
-        }
-        
-        function hideBanner() {
-            victoryBanner.style.display = 'none';
-        }
+        function hideToast() { congratsToast.classList.remove('show'); }
+        function hideBanner() { victoryBanner.style.display = 'none'; }
         
         function resetAfterVictory() {
             hideToast();
@@ -942,15 +1078,8 @@
             victoryTriggered = false;
         }
         
-        // Tombol event listeners untuk toast
-        document.getElementById('playAgainBtn').addEventListener('click', () => {
-            resetAfterVictory();
-        });
-        
-        document.getElementById('closeToastBtn').addEventListener('click', () => {
-            hideToast();
-        });
-        // ==================== END UCAPAN SELAMAT ====================
+        document.getElementById('playAgainBtn').addEventListener('click', resetAfterVictory);
+        document.getElementById('closeToastBtn').addEventListener('click', hideToast);
         
         // ==================== GAME LOGIC ====================
         const TARGET_STATE = [1, 2, 3, 4, 5, 6, 7, 8, 0];
@@ -995,54 +1124,27 @@
         
         function setupEventListeners() {
             randomPuzzleBtn.addEventListener('click', () => {
-                hideToast();
-                hideBanner();
-                generateRandomPuzzle();
-                victoryTriggered = false;
-                stopFireworks();
+                hideToast(); hideBanner(); generateRandomPuzzle(); victoryTriggered = false; stopFireworks();
             });
             customPuzzleBtn.addEventListener('click', () => {
                 customInputContainer.style.display = customInputContainer.style.display === 'block' ? 'none' : 'block';
-                hideToast();
-                hideBanner();
-                victoryTriggered = false;
-                stopFireworks();
+                hideToast(); hideBanner(); victoryTriggered = false; stopFireworks();
             });
-            startGameBtn.addEventListener('click', () => {
-                startGame();
-                hideToast();
-                hideBanner();
-                victoryTriggered = false;
-                stopFireworks();
-            });
+            startGameBtn.addEventListener('click', () => { startGame(); hideToast(); hideBanner(); victoryTriggered = false; stopFireworks(); });
             solvePuzzleBtn.addEventListener('click', solvePuzzle);
-            resetPuzzleBtn.addEventListener('click', () => {
-                resetPuzzle();
-                hideToast();
-                hideBanner();
-                victoryTriggered = false;
-                stopFireworks();
-            });
+            resetPuzzleBtn.addEventListener('click', () => { resetPuzzle(); hideToast(); hideBanner(); victoryTriggered = false; stopFireworks(); });
             hintBtn.addEventListener('click', showHint);
-            animationSpeedSlider.addEventListener('input', () => {
-                animationSpeed = parseInt(animationSpeedSlider.value);
-                speedValue.textContent = animationSpeed;
-            });
+            animationSpeedSlider.addEventListener('input', () => { animationSpeed = parseInt(animationSpeedSlider.value); speedValue.textContent = animationSpeed; });
             toggleDescriptionBtn.addEventListener('click', () => {
                 descriptionContent.classList.toggle('show');
                 toggleDescriptionBtn.textContent = descriptionContent.classList.contains('show') ? 'Sembunyikan Deskripsi' : 'Tampilkan Deskripsi';
             });
-            educationDropdownBtn.addEventListener('click', () => {
-                educationDropdownContent.classList.toggle('show');
-                educationDropdownBtn.classList.toggle('active');
-            });
+            educationDropdownBtn.addEventListener('click', () => educationDropdownContent.classList.toggle('show'));
             imageUpload.addEventListener('change', handleImageUpload);
-            
             puzzleContainer.addEventListener('click', (e) => {
                 const tile = e.target.closest('.tile');
                 if (tile && !tile.classList.contains('empty') && !isSolving && !victoryTriggered) handleTileClick(tile);
             });
-            
             setupDragAndDrop();
         }
         
@@ -1050,11 +1152,7 @@
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (ev) => {
-                    imageDataUrl = ev.target.result;
-                    renderPuzzle(currentPuzzle);
-                    showMessage('Gambar berhasil diupload!', 'success');
-                };
+                reader.onload = (ev) => { imageDataUrl = ev.target.result; renderPuzzle(currentPuzzle); showMessage('Gambar berhasil diupload!', 'success'); };
                 reader.readAsDataURL(file);
             }
         }
@@ -1063,10 +1161,7 @@
             let draggedTile = null;
             document.addEventListener('dragstart', (e) => {
                 const tile = e.target.closest('.tile');
-                if (tile && !tile.classList.contains('empty') && !victoryTriggered) {
-                    draggedTile = tile;
-                    e.dataTransfer.setData('text/plain', tile.dataset.index);
-                }
+                if (tile && !tile.classList.contains('empty') && !victoryTriggered) { draggedTile = tile; e.dataTransfer.setData('text/plain', tile.dataset.index); }
             });
             document.addEventListener('dragover', (e) => e.preventDefault());
             document.addEventListener('drop', (e) => {
@@ -1081,10 +1176,7 @@
                             swapTiles(draggedIndex, emptyIndex);
                             moves++;
                             updateStats();
-                            if (isPuzzleSolved() && !victoryTriggered) {
-                                victoryTriggered = true;
-                                handleVictory();
-                            }
+                            if (isPuzzleSolved() && !victoryTriggered) { victoryTriggered = true; handleVictory(); }
                         }, 400);
                     }
                     draggedTile.classList.remove('dragging');
@@ -1094,8 +1186,7 @@
         }
         
         function getDirection(from, to) {
-            const fr = Math.floor(from / 3), fc = from % 3;
-            const tr = Math.floor(to / 3), tc = to % 3;
+            const fr = Math.floor(from / 3), fc = from % 3, tr = Math.floor(to / 3), tc = to % 3;
             if (fr === tr) return fc < tc ? 'slide-right' : 'slide-left';
             return fr < tr ? 'slide-down' : 'slide-up';
         }
@@ -1110,24 +1201,17 @@
                     swapTiles(idx, emptyIdx);
                     moves++;
                     updateStats();
-                    if (isPuzzleSolved() && !victoryTriggered) {
-                        victoryTriggered = true;
-                        handleVictory();
-                    }
+                    if (isPuzzleSolved() && !victoryTriggered) { victoryTriggered = true; handleVictory(); }
                 }, 400);
             }
         }
         
         function isAdjacent(i1, i2) {
-            const r1 = Math.floor(i1/3), c1 = i1%3;
-            const r2 = Math.floor(i2/3), c2 = i2%3;
+            const r1 = Math.floor(i1/3), c1 = i1%3, r2 = Math.floor(i2/3), c2 = i2%3;
             return (Math.abs(r1-r2) === 1 && c1 === c2) || (Math.abs(c1-c2) === 1 && r1 === r2);
         }
         
-        function swapTiles(i1, i2) {
-            [currentPuzzle[i1], currentPuzzle[i2]] = [currentPuzzle[i2], currentPuzzle[i1]];
-            renderPuzzle(currentPuzzle);
-        }
+        function swapTiles(i1, i2) { [currentPuzzle[i1], currentPuzzle[i2]] = [currentPuzzle[i2], currentPuzzle[i1]]; renderPuzzle(currentPuzzle); }
         
         function getBackgroundPosition(val) {
             if (val === 0) return '100% 100%';
@@ -1154,25 +1238,14 @@
             });
         }
         
-        function isPuzzleSolved() {
-            for (let i = 0; i < 9; i++) if (currentPuzzle[i] !== TARGET_STATE[i]) return false;
-            return true;
-        }
+        function isPuzzleSolved() { for (let i = 0; i < 9; i++) if (currentPuzzle[i] !== TARGET_STATE[i]) return false; return true; }
         
         function handleVictory() {
-            // 1. Kembang api muncul DULU dengan durasi sesuai slider
             startFireworks();
             createBalloons();
             createQuickConfetti();
-            
-            // 2. Banner di atas puzzle langsung muncul
             victoryBanner.style.display = 'block';
-            
-            // 3. Toast ucapan selamat muncul setelah 1.5 detik (kembang api sudah berjalan)
-            setTimeout(() => {
-                showToastCongrats(moves);
-            }, 1500);
-            
+            setTimeout(() => showToastCongrats(moves), 1500);
             solvePuzzleBtn.disabled = true;
             hintBtn.disabled = true;
             showMessage('🎉 SELAMAT! Anda berhasil menyelesaikan puzzle secara manual! 🎉', 'success');
@@ -1182,10 +1255,7 @@
             let puzzle;
             do {
                 puzzle = [...TARGET_STATE];
-                for (let i = puzzle.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [puzzle[i], puzzle[j]] = [puzzle[j], puzzle[i]];
-                }
+                for (let i = puzzle.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [puzzle[i], puzzle[j]] = [puzzle[j], puzzle[i]]; }
             } while (!isSolvable(puzzle) || arraysEqual(puzzle, TARGET_STATE));
             currentPuzzle = puzzle;
             renderPuzzle(currentPuzzle);
@@ -1200,12 +1270,8 @@
                 const input = customPuzzleInput.value.trim();
                 if (input) {
                     const puzzle = input.split(/[\s,]+/).map(Number);
-                    if (puzzle.length === 9 && new Set(puzzle).size === 9 && puzzle.every(n => n >= 0 && n <= 8)) {
-                        currentPuzzle = puzzle;
-                    } else {
-                        showMessage('Input tidak valid!', 'error');
-                        return;
-                    }
+                    if (puzzle.length === 9 && new Set(puzzle).size === 9 && puzzle.every(n => n >= 0 && n <= 8)) currentPuzzle = puzzle;
+                    else { showMessage('Input tidak valid!', 'error'); return; }
                 }
             }
             renderPuzzle(currentPuzzle);
@@ -1216,35 +1282,15 @@
             victoryTriggered = false;
         }
         
-        function resetPuzzle() {
-            currentPuzzle = [...TARGET_STATE];
-            renderPuzzle(currentPuzzle);
-            resetGameStats();
-            solvePuzzleBtn.disabled = true;
-            hintBtn.disabled = true;
-            solutionInfo.style.display = 'none';
-            isSolving = false;
-            victoryTriggered = false;
-        }
+        function resetPuzzle() { currentPuzzle = [...TARGET_STATE]; renderPuzzle(currentPuzzle); resetGameStats(); solvePuzzleBtn.disabled = true; hintBtn.disabled = true; solutionInfo.style.display = 'none'; isSolving = false; victoryTriggered = false; }
         
         function solvePuzzle() {
             if (isSolving) return;
-            if (!isSolvable(currentPuzzle)) {
-                showMessage('Puzzle ini tidak dapat diselesaikan!', 'error');
-                return;
-            }
-            isSolving = true;
-            solvePuzzleBtn.disabled = true;
-            startGameBtn.disabled = true;
-            hintBtn.disabled = true;
-            
+            if (!isSolvable(currentPuzzle)) { showMessage('Puzzle ini tidak dapat diselesaikan!', 'error'); return; }
+            isSolving = true; solvePuzzleBtn.disabled = true; startGameBtn.disabled = true; hintBtn.disabled = true;
             setTimeout(() => {
                 const path = bfsSolve(currentPuzzle, TARGET_STATE);
-                if (path.length === 0) {
-                    showMessage('Tidak ditemukan solusi!', 'error');
-                    resetSolveButton();
-                    return;
-                }
+                if (path.length === 0) { showMessage('Tidak ditemukan solusi!', 'error'); resetSolveButton(); return; }
                 totalSolutionSteps = path.length - 1;
                 solutionInfo.style.display = 'block';
                 totalSteps.textContent = totalSolutionSteps;
@@ -1254,20 +1300,10 @@
         
         let totalSolutionSteps = 0;
         function animateSolution(path, step) {
-            if (step >= path.length) {
-                resetSolveButton();
-                showMessage(`Puzzle berhasil diselesaikan secara otomatis dalam ${totalSolutionSteps} langkah!`, 'info');
-                solvePuzzleBtn.disabled = true;
-                hintBtn.disabled = true;
-                return;
-            }
-            currentPuzzle = [...path[step]];
-            renderPuzzle(currentPuzzle);
-            updateStats();
-            stepCounter.textContent = step;
-            totalSteps.textContent = totalSolutionSteps;
-            const percent = (step / totalSolutionSteps) * 100;
-            progressBar.style.width = `${percent}%`;
+            if (step >= path.length) { resetSolveButton(); showMessage(`Puzzle berhasil diselesaikan secara otomatis dalam ${totalSolutionSteps} langkah!`, 'info'); solvePuzzleBtn.disabled = true; hintBtn.disabled = true; return; }
+            currentPuzzle = [...path[step]]; renderPuzzle(currentPuzzle); updateStats();
+            stepCounter.textContent = step; totalSteps.textContent = totalSolutionSteps;
+            progressBar.style.width = `${(step / totalSolutionSteps) * 100}%`;
             setTimeout(() => animateSolution(path, step + 1), 1100 - (animationSpeed * 100));
         }
         
@@ -1315,59 +1351,22 @@
                         swapTiles(movedIdx, emptyIdx);
                         moves++;
                         updateStats();
-                        if (isPuzzleSolved() && !victoryTriggered) {
-                            victoryTriggered = true;
-                            handleVictory();
-                        }
+                        if (isPuzzleSolved() && !victoryTriggered) { victoryTriggered = true; handleVictory(); }
                     }, 400);
                 }
             }
         }
         
-        function resetSolveButton() {
-            isSolving = false;
-            solvePuzzleBtn.disabled = false;
-            startGameBtn.disabled = false;
-            hintBtn.disabled = false;
-        }
-        
-        function calculateInversions(puzzle) {
-            const flat = puzzle.filter(x => x !== 0);
-            let inv = 0;
-            for (let i = 0; i < flat.length; i++)
-                for (let j = i+1; j < flat.length; j++)
-                    if (flat[i] > flat[j]) inv++;
-            return inv;
-        }
-        
+        function resetSolveButton() { isSolving = false; solvePuzzleBtn.disabled = false; startGameBtn.disabled = false; hintBtn.disabled = false; }
+        function calculateInversions(puzzle) { const flat = puzzle.filter(x => x !== 0); let inv = 0; for (let i = 0; i < flat.length; i++) for (let j = i+1; j < flat.length; j++) if (flat[i] > flat[j]) inv++; return inv; }
         function isSolvable(puzzle) { return calculateInversions(puzzle) % 2 === 0; }
-        
-        function updateSolvabilityInfo() {
-            const inv = calculateInversions(currentPuzzle);
-            inversionsInfo.textContent = `Inversi: ${inv}`;
-            solvabilityInfo.textContent = `Status: ${inv % 2 === 0 ? '✅ Dapat Diselesaikan' : '❌ Tidak Dapat Diselesaikan'}`;
-            solvabilityInfo.style.color = inv % 2 === 0 ? 'green' : 'red';
-        }
-        
-        function updateStats() {
-            movesInfo.textContent = `Langkah: ${moves}`;
-            updateSolvabilityInfo();
-        }
-        
+        function updateSolvabilityInfo() { const inv = calculateInversions(currentPuzzle); inversionsInfo.textContent = `Inversi: ${inv}`; solvabilityInfo.textContent = `Status: ${inv % 2 === 0 ? '✅ Dapat Diselesaikan' : '❌ Tidak Dapat Diselesaikan'}`; solvabilityInfo.style.color = inv % 2 === 0 ? 'green' : 'red'; }
+        function updateStats() { movesInfo.textContent = `Langkah: ${moves}`; updateSolvabilityInfo(); }
         function resetGameStats() { moves = 0; updateStats(); }
-        
         function arraysEqual(a, b) { return a.length === b.length && a.every((v,i) => v === b[i]); }
+        function showMessage(msg, type) { messageContainer.textContent = msg; messageContainer.className = `message ${type}`; messageContainer.classList.add('show'); setTimeout(() => messageContainer.classList.remove('show'), 4000); }
         
-        function showMessage(msg, type) {
-            messageContainer.textContent = msg;
-            messageContainer.className = `message ${type}`;
-            messageContainer.classList.add('show');
-            setTimeout(() => messageContainer.classList.remove('show'), 4000);
-        }
-        
-        // Efek perayaan tambahan
         const balloonColors = ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2', '#EF476F', '#FF9A76', '#7BC950'];
-        
         function createQuickConfetti() {
             const container = document.querySelector('.container');
             for (let i = 0; i < 60; i++) {
