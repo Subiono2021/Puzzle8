@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8-Puzzle Game - Teori Grup dengan Gambar</title>
+    <title>8-Puzzle Game - Teori Grup dengan Gambar & Fireworks Meriah</title>
     
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>
     MathJax = {
       tex: {
@@ -23,7 +21,6 @@
             --accent: #e74c3c;
             --dark: #2c3e50;
             --light: #ecf0f1;
-            --balloon-colors: #FF6B6B, #4ECDC4, #FFD166, #06D6A0, #118AB2, #EF476F, #FF9A76, #7BC950, #FFD3BA, #A0E7E5;
         }
         
         * {
@@ -39,6 +36,112 @@
             line-height: 1.6;
             padding: 20px;
             overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Canvas untuk Fireworks */
+        #fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+            display: none;
+        }
+        
+        /* Toast Ucapan Selamat - Tidak menutupi full screen */
+        .congrats-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 20px 30px;
+            max-width: 380px;
+            z-index: 10000;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            transform: translateX(120%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-left: 5px solid #ffd700;
+        }
+        
+        .congrats-toast.show {
+            transform: translateX(0);
+        }
+        
+        .congrats-toast h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .congrats-toast .stats-mini {
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+        
+        .congrats-toast .stats-mini p {
+            margin: 5px 0;
+            color: white;
+        }
+        
+        .congrats-toast .stats-mini span {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        .congrats-toast button {
+            background: #ffd700;
+            color: #333;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .congrats-toast button:hover {
+            transform: scale(1.05);
+            background: #ffed4e;
+        }
+        
+        .congrats-toast .btn-secondary {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+        
+        .congrats-toast .btn-secondary:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        
+        /* Banner ucapan selamat di atas puzzle */
+        .victory-banner {
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            color: white;
+            text-align: center;
+            padding: 12px;
+            border-radius: 50px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            animation: pulse 1s infinite;
+            display: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
         }
         
         .container {
@@ -58,22 +161,6 @@
             text-align: center;
         }
         
-        h2 {
-            color: var(--dark);
-            margin: 1.5rem 0 1rem;
-            border-bottom: 2px solid var(--light);
-            padding-bottom: 0.5rem;
-        }
-        
-        h3 {
-            color: var(--primary);
-            margin: 1rem 0;
-        }
-        
-        .section {
-            margin-bottom: 2rem;
-        }
-        
         .puzzle-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -81,12 +168,10 @@
             width: 310px;
             height: 310px;
             margin: 0 auto 2rem;
-            /* Frame garis tipis (1px) dan tidak terlalu tebal */
             border: 1px solid var(--dark);
             border-radius: 8px;
             padding: 2px;
             background-color: var(--dark);
-            position: relative;
         }
         
         .tile {
@@ -102,43 +187,22 @@
             user-select: none;
             transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             position: relative;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             background-size: 300% 300%;
             background-position: center;
             background-repeat: no-repeat;
-            overflow: hidden;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
         
         .tile.has-image {
             background-size: 300% 300%;
             color: white;
-            text-shadow: 
-                -1px -1px 0 #000,
-                1px -1px 0 #000,
-                -1px 1px 0 #000,
-                1px 1px 0 #000,
-                0 0 10px rgba(0,0,0,0.8);
-            font-weight: 800;
-            /* Ukuran font lebih kecil untuk tidak mengganggu gambar */
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
             font-size: 0.8rem;
         }
         
-        .tile:hover {
+        .tile:hover:not(.empty) {
             background-color: #2980b9;
             transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        
-        .tile.dragging {
-            opacity: 0.9;
-            transform: scale(1.08);
-            z-index: 10;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-        }
-        
-        .tile.valid-move {
-            box-shadow: 0 0 0 3px var(--secondary);
         }
         
         .tile.moving {
@@ -146,66 +210,28 @@
             z-index: 5;
         }
         
-        .tile.slide-left {
-            animation: slideLeft 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
+        .tile.slide-left { animation: slideLeft 0.4s forwards; }
+        .tile.slide-right { animation: slideRight 0.4s forwards; }
+        .tile.slide-up { animation: slideUpTile 0.4s forwards; }
+        .tile.slide-down { animation: slideDownTile 0.4s forwards; }
         
-        .tile.slide-right {
-            animation: slideRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        
-        .tile.slide-up {
-            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        
-        .tile.slide-down {
-            animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        
-        @keyframes slideLeft {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-105px); }
-        }
-        
-        @keyframes slideRight {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(105px); }
-        }
-        
-        @keyframes slideUp {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-105px); }
-        }
-        
-        @keyframes slideDown {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(105px); }
-        }
+        @keyframes slideLeft { 100% { transform: translateX(-105px); } }
+        @keyframes slideRight { 100% { transform: translateX(105px); } }
+        @keyframes slideUpTile { 100% { transform: translateY(-105px); } }
+        @keyframes slideDownTile { 100% { transform: translateY(105px); } }
         
         .empty {
             background-color: var(--light);
             cursor: default;
-            transition: all 0.3s ease;
         }
         
         .empty.has-image {
             background-color: transparent;
-            background-size: 300% 300%;
-            color: rgba(255,255,255,0.9);
         }
         
         .empty.highlight {
             background-color: rgba(46, 204, 113, 0.3);
             box-shadow: 0 0 0 2px var(--secondary);
-        }
-        
-        .empty:hover {
-            background-color: var(--light);
-            transform: none;
-        }
-        
-        .empty.has-image:hover {
-            background-color: transparent;
         }
         
         .controls {
@@ -231,29 +257,19 @@
             border-radius: 30px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.3s ease;
             min-width: 140px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
         }
         
         button:hover {
             background-color: #2980b9;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 3px rgba(0,0,0,0.1);
         }
         
         button:disabled {
             background-color: #bdc3c7;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
         
         .input-group {
@@ -270,65 +286,27 @@
             text-align: center;
         }
         
-        input[type="text"] {
+        input[type="text"], input[type="file"] {
             width: 100%;
             padding: 0.7rem;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-        
-        input[type="file"] {
-            width: 100%;
-            padding: 0.7rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            background-color: white;
-            cursor: pointer;
-        }
-        
-        input[type="file"]:hover {
-            border-color: var(--primary);
         }
         
         .slider-container {
             display: flex;
             align-items: center;
             gap: 1rem;
-            margin-bottom: 1rem;
             justify-content: center;
+            flex-wrap: wrap;
         }
         
         input[type="range"] {
             width: 200px;
-            -webkit-appearance: none;
             height: 6px;
             border-radius: 3px;
             background: #ddd;
-            outline: none;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--primary);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb:hover {
-            background: #2980b9;
-            transform: scale(1.1);
         }
         
         .stats {
@@ -337,17 +315,6 @@
             border-radius: 8px;
             margin-bottom: 1rem;
             text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .stats.updated {
-            background-color: rgba(52, 152, 219, 0.1);
-            transform: scale(1.02);
-        }
-        
-        .stats p {
-            margin-bottom: 0.5rem;
-            transition: all 0.3s ease;
         }
         
         .message {
@@ -356,7 +323,6 @@
             margin-bottom: 1rem;
             text-align: center;
             font-weight: 600;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform: translateY(-10px);
             opacity: 0;
             max-height: 0;
@@ -369,73 +335,19 @@
             max-height: 100px;
         }
         
-        .success {
-            background-color: rgba(46, 204, 113, 0.2);
-            color: var(--secondary);
-            border: 1px solid var(--secondary);
-        }
-        
-        .error {
-            background-color: rgba(231, 76, 60, 0.2);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        
-        .info {
-            background-color: rgba(52, 152, 219, 0.2);
-            color: var(--primary);
-            border: 0.2px solid var(--primary);
-        }
-        
-        .toggle-description {
-            margin-bottom: 1rem;
-            text-align: center;
-        }
+        .success { background-color: rgba(46, 204, 113, 0.2); color: var(--secondary); border: 1px solid var(--secondary); }
+        .error { background-color: rgba(231, 76, 60, 0.2); color: var(--accent); border: 1px solid var(--accent); }
+        .info { background-color: rgba(52, 152, 219, 0.2); color: var(--primary); border: 1px solid var(--primary); }
         
         .description-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: max-height 0.5s ease;
         }
         
         .description-content.show {
             max-height: 400px;
             overflow-y: auto;
-            padding-right: 10px;
-        }
-        
-        .description-content::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .description-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        
-        .description-content::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 4px;
-        }
-        
-        .description-content::-webkit-scrollbar-thumb:hover {
-            background: #2980b9;
-        }
-        
-        ul {
-            margin-left: 2rem;
-            margin-bottom: 1rem;
-        }
-        
-        li {
-            margin-bottom: 0.5rem;
-        }
-        
-        code {
-            background-color: #f1f1f1;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-family: monospace;
         }
         
         .math-explanation {
@@ -444,11 +356,6 @@
             padding: 1rem;
             margin: 1rem 0;
             border-radius: 0 8px 8px 0;
-        }
-        
-        .math-explanation h4 {
-            color: var(--dark);
-            margin-bottom: 0.5rem;
         }
         
         .loading {
@@ -462,9 +369,7 @@
             margin-right: 10px;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
         
         .game-info {
             display: flex;
@@ -481,38 +386,21 @@
             border-radius: 8px;
             margin-bottom: 1rem;
             text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .pulse {
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
         }
         
         .confetti {
             position: absolute;
             width: 10px;
             height: 10px;
-            background-color: var(--secondary);
             opacity: 0.7;
             border-radius: 50%;
             animation: confettiFall 2s ease-in-out forwards;
+            pointer-events: none;
         }
         
         @keyframes confettiFall {
-            0% {
-                transform: translateY(-100px) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(500px) rotate(360deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
         }
         
         .balloon {
@@ -520,11 +408,10 @@
             width: 40px;
             height: 50px;
             border-radius: 50%;
-            z-index: 1000;
+            z-index: 9999;
             pointer-events: none;
             opacity: 0.9;
             transform: translateY(100vh);
-            animation-timing-function: ease-out;
             box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2);
         }
         
@@ -539,55 +426,9 @@
             transform: translateX(-50%);
         }
         
-        .balloon:after {
-            content: '';
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            width: 4px;
-            height: 5px;
-            background-color: rgba(255,255,255,0.9);
-            border-radius: 50%;
-            transform: translateX(-50%);
-        }
-        
         @keyframes balloonFloat {
-            0% {
-                transform: translateY(100vh) translateX(0) rotate(0deg);
-                opacity: 1;
-            }
-            10% {
-                transform: translateY(90vh) translateX(10px) rotate(5deg);
-            }
-            20% {
-                transform: translateY(80vh) translateX(-10px) rotate(-5deg);
-            }
-            30% {
-                transform: translateY(70vh) translateX(15px) rotate(7deg);
-            }
-            40% {
-                transform: translateY(60vh) translateX(-15px) rotate(-7deg);
-            }
-            50% {
-                transform: translateY(50vh) translateX(10px) rotate(5deg);
-            }
-            60% {
-                transform: translateY(40vh) translateX(-10px) rotate(-5deg);
-            }
-            70% {
-                transform: translateY(30vh) translateX(5px) rotate(3deg);
-            }
-            80% {
-                transform: translateY(20vh) translateX(-5px) rotate(-3deg);
-            }
-            90% {
-                transform: translateY(10vh) translateX(2px) rotate(1deg);
-                opacity: 0.8;
-            }
-            100% {
-                transform: translateY(-100px) translateX(0) rotate(0deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(100vh) translateX(0); opacity: 1; }
+            100% { transform: translateY(-100px) translateX(0); opacity: 0; }
         }
         
         .solution-info {
@@ -596,7 +437,6 @@
             border-radius: 8px;
             margin-bottom: 1rem;
             text-align: center;
-            border-left: 4px solid var(--primary);
         }
         
         .counter-container {
@@ -605,8 +445,6 @@
             align-items: center;
             gap: 0.5rem;
             margin-top: 0.5rem;
-            font-size: 0.75rem;
-            font-weight: bold;
         }
         
         .counter {
@@ -616,18 +454,6 @@
             border-radius: 20px;
             min-width: 60px;
             text-align: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .counter.animating {
-            animation: countPulse 0.5s ease-out;
-        }
-        
-        @keyframes countPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
         }
         
         .progress-container {
@@ -642,100 +468,17 @@
         .progress-bar {
             height: 100%;
             background-color: var(--secondary);
-            border-radius: 4px;
             transition: width 0.5s ease;
             width: 0%;
         }
         
-        .celebration-text {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            font-size: 3rem;
-            font-weight: bold;
-            color: #FF6B6B;
-            z-index: 1001;
-            pointer-events: none;
-            text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            animation: textPop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        
-        @keyframes textPop {
-            0% {
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 0;
-            }
-            70% {
-                transform: translate(-50%, -50%) scale(1.2);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-        }
-        
-        .celebration-text span {
-            display: block;
-            font-size: 1.5rem;
-            color: #3498db;
-            margin-top: 10px;
-        }
-        
-        .image-preview {
-            margin-top: 0.5rem;
-            text-align: center;
-            font-size: 0.9rem;
-            color: var(--primary);
-        }
-        
-        /* Style untuk angka di atas gambar - diperkecil */
-        .tile span.number-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 2;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-shadow: 
-                -2px -2px 0 #000,
-                2px -2px 0 #000,
-                -2px 2px 0 #000,
-                2px 2px 0 #000,
-                0 0 15px rgba(0,0,0,0.9);
-            background-color: rgba(0,0,0,0.2);
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 5px;
-            pointer-events: none;
-        }
-
-        /* Ukuran font lebih kecil untuk mobile */
-        @media (max-width: 600px) {
-            .tile.has-image {
-                font-size: 1rem;
-            }
-            
-            .tile span.number-overlay {
-                font-size: 1rem;
-            }
-        }
-
-        /* Dropdown Manfaat Pendidikan */
         .dropdown-section {
             margin: 20px 0;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             overflow: hidden;
         }
-
+        
         .dropdown-header {
             width: 100%;
             padding: 15px 20px;
@@ -744,130 +487,81 @@
             text-align: left;
             font-size: 1.1rem;
             font-weight: 600;
-            color: #2c3e50;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: background-color 0.3s ease;
         }
-
-        .dropdown-header:hover {
-            background-color: #e9ecef;
-        }
-
-        .dropdown-header i {
-            transition: transform 0.3s ease;
-        }
-
-        .dropdown-header.active i {
-            transform: rotate(180deg);
-        }
-
+        
         .dropdown-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.5s ease-out;
-            background-color: white;
         }
-
+        
         .dropdown-content.show {
             max-height: 2000px;
-            transition: max-height 0.8s ease-in;
         }
-
+        
         .benefits-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             padding: 20px;
         }
-
+        
         .benefit-card {
             background-color: #f8f9fa;
             border-radius: 8px;
             padding: 15px;
             border-left: 4px solid;
-            transition: transform 0.2s ease;
         }
-
-        .benefit-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
+        
         .benefit-card.cognitive { border-left-color: #FF6B6B; }
         .benefit-card.math { border-left-color: #4ECDC4; }
         .benefit-card.memory { border-left-color: #FFD166; }
         .benefit-card.educational { border-left-color: #06D6A0; }
-
+        
         .benefit-title {
             font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 12px;
-            color: #2c3e50;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-
+        
         .benefit-list {
             list-style: none;
             padding: 0;
-            margin: 0;
         }
-
+        
         .benefit-list li {
             padding: 6px 0;
             padding-left: 20px;
             position: relative;
-            font-size: 0.95rem;
-            color: #555;
         }
-
+        
         .benefit-list li:before {
             content: "✓";
             position: absolute;
             left: 0;
             color: #3498db;
-            font-weight: bold;
         }
-
-        .age-group {
-            padding: 0 20px 20px;
-        }
-
-        .age-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
+        
         .age-benefits {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
+            padding: 0 20px 20px;
         }
-
+        
         .age-item {
             background-color: #f0f7ff;
             padding: 12px;
             border-radius: 8px;
         }
-
-        .age-item h4 {
-            color: #3498db;
-            margin-bottom: 8px;
-            font-size: 1rem;
-        }
-
-        .age-item p {
-            font-size: 0.9rem;
-            color: #555;
-            margin: 0;
-        }
-
+        
         .conclusion {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -875,87 +569,80 @@
             margin: 0 20px 20px;
             border-radius: 8px;
         }
-
-        .conclusion p {
-            margin: 0;
+        
+        .button-example {
+            display: inline-block;
+            background-color: #3498db;
             color: white;
+            padding: 0.2rem 0.7rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
         }
-
-        .conclusion em {
-            color: rgba(255,255,255,0.9);
+        
+        /* Slider khusus durasi kembang api */
+        .fireworks-control {
+            background: linear-gradient(135deg, #ff6b6b20, #ffd16620);
+            padding: 12px;
+            border-radius: 12px;
+            margin: 10px 0;
         }
-
+        
+        .fireworks-control label {
+            font-weight: bold;
+            color: #e67e22;
+        }
+        
+        .duration-value {
+            background: #e67e22;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
         @media (max-width: 600px) {
-            .puzzle-container {
-                width: 250px;
-                height: 250px;
-            }
-            
-            .tile {
-                font-size: 1.5rem;
-            }
-            
-            @keyframes slideLeft {
-                0% { transform: translateX(0); }
-                100% { transform: translateX(-85px); }
-            }
-            
-            @keyframes slideRight {
-                0% { transform: translateX(0); }
-                100% { transform: translateX(85px); }
-            }
-            
-            @keyframes slideUp {
-                0% { transform: translateY(0); }
-                100% { transform: translateY(-85px); }
-            }
-            
-            @keyframes slideDown {
-                0% { transform: translateY(0); }
-                100% { transform: translateY(85px); }
-            }
-            
-            .control-group {
-                flex-direction: column;
-            }
-            
-            button {
-                width: 100%;
-                max-width: 250px;
-            }
-            
-            .game-info {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .celebration-text {
-                font-size: 2rem;
-            }
-            
-            .celebration-text span {
-                font-size: 1.2rem;
-            }
-
-            .benefits-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .age-benefits {
-                grid-template-columns: 1fr;
-            }
+            .puzzle-container { width: 250px; height: 250px; }
+            .tile { font-size: 1.5rem; }
+            @keyframes slideLeft { 100% { transform: translateX(-85px); } }
+            @keyframes slideRight { 100% { transform: translateX(85px); } }
+            @keyframes slideUpTile { 100% { transform: translateY(-85px); } }
+            @keyframes slideDownTile { 100% { transform: translateY(85px); } }
+            .benefits-grid, .age-benefits { grid-template-columns: 1fr; }
+            .congrats-toast { bottom: 20px; right: 20px; left: 20px; max-width: none; padding: 15px; }
         }
     </style>
 </head>
 <body>
+    <!-- Canvas untuk Fireworks -->
+    <canvas id="fireworks-canvas"></canvas>
+    
+    <!-- Toast Ucapan Selamat (tidak menutupi full screen) -->
+    <div id="congratsToast" class="congrats-toast">
+        <h3>🎉 SELAMAT! 🎉</h3>
+        <div id="toastMessage" style="color: white; margin-bottom: 10px;">
+            Anda berhasil menyelesaikan puzzle!
+        </div>
+        <div class="stats-mini" id="toastStats">
+            <p>📊 <span id="toastMoves">0</span> Langkah</p>
+            <p>⭐ Tingkat: <span id="toastDifficulty">-</span></p>
+        </div>
+        <div>
+            <button id="playAgainBtn">🎮 Main Lagi</button>
+            <button id="closeToastBtn" class="btn-secondary">✖ Tutup</button>
+        </div>
+    </div>
+    
     <div class="container">
-        <h1>BiMath: Permainan 8-Puzzle Menggunakan Teori Grup</h1>
+        <h1>🧩 BiMath: Permainan 8-Puzzle | Teori Grup</h1>
         
-        <div class="toggle-description">
-            <button id="toggle-description-btn">Tampilkan Deskripsi Program</button>
+        <div class="victory-banner" id="victoryBanner">
+            🏆 SELAMAT! PUZZLE TERSELESAIKAN! 🏆
         </div>
         
-        <!-- Dropdown Manfaat Pendidikan -->
+        <div class="toggle-description">
+            <button id="toggle-description-btn">📖 Tampilkan Deskripsi Program</button>
+        </div>
+        
         <div class="dropdown-section">
             <button class="dropdown-header" id="educationDropdownBtn">
                 <span>📚 Manfaat Pendidikan untuk Perkembangan Anak</span>
@@ -963,196 +650,64 @@
             </button>
             <div class="dropdown-content" id="educationDropdownContent">
                 <div class="benefits-grid">
-                    <!-- Kognitif -->
                     <div class="benefit-card cognitive">
-                        <div class="benefit-title">
-                            <span>🧠</span> Pengembangan Kognitif
-                        </div>
+                        <div class="benefit-title"><span>🧠</span> Pengembangan Kognitif</div>
                         <ul class="benefit-list">
                             <li>Pemecahan masalah (problem solving)</li>
                             <li>Perencanaan strategis beberapa langkah ke depan</li>
                             <li>Berpikir logis dan sebab-akibat</li>
-                            <li>Pengenalan pola dan keteraturan</li>
-                            <li>Fleksibilitas kognitif - mencoba strategi berbeda</li>
                         </ul>
                     </div>
-                    
-                    <!-- Matematika -->
                     <div class="benefit-card math">
-                        <div class="benefit-title">
-                            <span>🔢</span> Pengembangan Matematika
-                        </div>
+                        <div class="benefit-title"><span>🔢</span> Pengembangan Matematika</div>
                         <ul class="benefit-list">
                             <li>Konsep inversi dan permutasi genap</li>
                             <li>Berpikir algoritmik dan sistematis</li>
                             <li>Spatial reasoning (pemahaman ruang)</li>
-                            <li>Pengenalan angka 1-8 dan urutannya</li>
-                            <li>Fondasi teori grup secara intuitif</li>
                         </ul>
                     </div>
-                    
-                    <!-- Memori -->
                     <div class="benefit-card memory">
-                        <div class="benefit-title">
-                            <span>💭</span> Pengembangan Memori
-                        </div>
+                        <div class="benefit-title"><span>💭</span> Pengembangan Memori</div>
                         <ul class="benefit-list">
                             <li>Memori jangka pendek - posisi tile</li>
                             <li>Memori visual - potongan gambar</li>
                             <li>Memori kerja - perencanaan langkah</li>
-                            <li>Mengingat pola dan strategi</li>
                         </ul>
                     </div>
-                    
-                    <!-- Keterampilan Eksekutif -->
                     <div class="benefit-card educational">
-                        <div class="benefit-title">
-                            <span>🎯</span> Keterampilan Eksekutif
-                        </div>
+                        <div class="benefit-title"><span>🎯</span> Keterampilan Eksekutif</div>
                         <ul class="benefit-list">
                             <li>Konsentrasi dan fokus yang meningkat</li>
                             <li>Kesabaran dalam menyelesaikan tugas</li>
-                            <li>Inhibisi - menahan tindakan impulsif</li>
                             <li>Fleksibilitas mengubah strategi</li>
-                            <li>Ketelitian dalam mengamati detail</li>
                         </ul>
                     </div>
                 </div>
-                
-                <!-- Manfaat per Kelompok Usia -->
-                <div class="age-group">
-                    <div class="age-title">🎯 Manfaat Spesifik per Kelompok Usia</div>
-                    <div class="age-benefits">
-                        <div class="age-item">
-                            <h4>Usia 4-6 Tahun (TK)</h4>
-                            <p>Pengenalan angka 1-8, koordinasi mata-tangan, konsep "kosong", melatih kesabaran</p>
-                        </div>
-                        <div class="age-item">
-                            <h4>Usia 7-9 Tahun (SD Kelas 1-3)</h4>
-                            <p>Memahami urutan dan pola, merencanakan langkah sederhana, mengenal inversi secara intuitif</p>
-                        </div>
-                        <div class="age-item">
-                            <h4>Usia 10-12 Tahun (SD Kelas 4-6)</h4>
-                            <p>Memahami solvabilitas puzzle, belajar algoritma, mengembangkan strategi efisien</p>
-                        </div>
-                    </div>
+                <div class="age-benefits">
+                    <div class="age-item"><h4>Usia 4-6 Tahun</h4><p>Pengenalan angka, koordinasi mata-tangan</p></div>
+                    <div class="age-item"><h4>Usia 7-9 Tahun</h4><p>Memahami urutan, merencanakan langkah</p></div>
+                    <div class="age-item"><h4>Usia 10-12 Tahun</h4><p>Memahami solvabilitas, algoritma</p></div>
                 </div>
-                
-                <!-- Manfaat Fitur Khusus -->
-                <div style="padding: 0 1.5rem 1rem;">
-                    <h4 style="color: var(--primary); margin-bottom: 0.5rem;">✨ Manfaat dari Fitur Khusus</h4>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.8rem;">
-                        <div style="background-color: #f0f7ff; padding: 0.8rem; border-radius: 6px;">
-                            <strong>🐱 Gambar Binatang:</strong> Meningkatkan minat belajar, stimulasi visual
-                        </div>
-                        <div style="background-color: #f0f7ff; padding: 0.8rem; border-radius: 6px;">
-                            <strong>📁 Upload Gambar:</strong> Personalisasi, kreativitas, rasa memiliki
-                        </div>
-                        <div style="background-color: #f0f7ff; padding: 0.8rem; border-radius: 6px;">
-                            <strong>🎲 Puzzle Acak:</strong> Variasi tantangan, belajar dari kesalahan
-                        </div>
-                        <div style="background-color: #f0f7ff; padding: 0.8rem; border-radius: 6px;">
-                            <strong>💡 Fitur Bantuan:</strong> Belajar dari contoh, tidak mudah frustrasi
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Kesimpulan -->
                 <div class="conclusion">
-                    <p><strong>🌟 Dampak Jangka Panjang:</strong> Membangun fondasi matematika, keterampilan belajar mandiri, ketahanan mental, apresiasi seni, dan keterampilan digital.</p>
-                    <p style="margin-top: 0.5rem;"><em>"Bermain puzzle ini bukan sekadar hiburan, tetapi investasi untuk kecerdasan anak di masa depan."</em></p>
+                    <p><strong>🌟 Dampak Jangka Panjang:</strong> Membangun fondasi matematika, keterampilan belajar mandiri, dan ketahanan mental.</p>
                 </div>
             </div>
         </div>
         
         <div class="description-content" id="description-content">
             <h2>Deskripsi Program</h2>
-            <p>This work has benefited from discussions and collaborative engagement with <b>DeepSeek</b>, <b>ChatGPT</b> and <b>Google Gemini</b>, whose contributions are gratefully acknowledged.</p>
-            <br>
-            <hr>
-            <br>
-            <p>
-                Program ini adalah permainan <strong>8-Puzzle</strong>, di mana pengguna harus menyusun angka 1-8
-                pada sebuah grid $3\times 3$ sehingga posisi kosong (0) berada di akhir.
-            </p>
-            
+            <p>Program ini adalah permainan <strong>8-Puzzle</strong>, di mana pengguna harus menyusun angka 1-8 pada grid $3\times 3$ sehingga posisi kosong (0) berada di akhir.</p>
             <div class="math-explanation">
                 <h4>Fondasi Matematika: Permutasi Genap dan Teori Grup</h4>
-                <p>Dalam 8-puzzle, <strong>permutasi genap</strong> memainkan peran penting dalam menentukan apakah suatu konfigurasi puzzle dapat diselesaikan:</p>
-                
-                <p><strong>1. Konsep Inversi:</strong></p>
-                <p>Sebuah inversi terjadi ketika sebuah angka yang lebih besar mendahului angka yang lebih kecil dalam urutan barisan (tidak termasuk angka 0/kotak kosong).</p>
-                
-                <p><strong>2. Paritas Permutasi:</strong></p>
-                <p>Permutasi dapat diklasifikasikan sebagai <em>genap</em> atau <em>ganjil</em> berdasarkan jumlah inversinya:</p>
-                <ul>
-                    <li>Permutasi <strong>genap</strong>: jumlah inversinya genap</li>
-                    <li>Permutasi <strong>ganjil</strong>: jumlah inversinya ganjil</li>
-                </ul>
-                
-                <p><strong>3. Teorema Solvabilitas 8-Puzzle:</strong></p>
-                <p>Sebuah konfigurasi 8-puzzle dapat diselesaikan jika dan hanya jika:</p>
-                <p style="text-align: center;">$\text{(jumlah inversi)} + \text{(jarak baris kotak kosong dari bawah)}$ adalah <strong>genap</strong></p>
-                <p>Untuk grid $3 \times 3$ (lebar ganjil), cukup dengan memeriksa apakah jumlah inversinya genap.</p>
-                
-                <p><strong>4. Koneksi dengan Teori Grup:</strong></p>
-                <p>Setiap konfigurasi 8-puzzle dapat dipandang sebagai permutasi dari 9 elemen (angka 1-8 dan kotak kosong). Setiap langkah permainan adalah transposisi antara kotak kosong dan angka yang bersebelahan, yang merupakan permutasi ganjil. Karena:</p>
-                <ul>
-                    <li>Konfigurasi awal adalah identitas (permutasi genap)</li>
-                    <li>Setiap langkah mengubah paritas permutasi</li>
-                    <li>Untuk kembali ke identitas, dibutuhkan jumlah langkah genap</li>
-                </ul>
-                <p>Maka hanya <strong>permutasi genap</strong> dari 9 elemen yang dapat dicapai. Dalam teori grup, himpunan permutasi genap membentuk <strong>grup alternasi $A_9$</strong>, subgrup dari grup simetri $S_9$.</p>
-                
-                <p><strong>5. Implikasi dalam Program:</strong></p>
-                <p>Program ini menggunakan konsep permutasi genap untuk:</p>
-                <ul>
-                    <li>Memastikan puzzle yang dihasilkan acak dapat diselesaikan (anggota $A_9$)</li>
-                    <li>Memvalidasi input pengguna</li>
-                    <li>Memberikan informasi tentang solvabilitas puzzle berdasarkan paritas inversi</li>
-                </ul>
+                <p>Sebuah konfigurasi 8-puzzle dapat diselesaikan jika dan hanya jika jumlah inversinya adalah <strong>genap</strong>.</p>
+                <p>Setiap langkah permainan adalah transposisi yang mengubah paritas permutasi. Hanya <strong>permutasi genap</strong> dari 9 elemen yang dapat dicapai, membentuk <strong>grup alternasi $A_9$</strong>.</p>
             </div>
-            
-            <p><strong>Fitur Utama:</strong></p>
-            <ul>
-                <li><strong>Solvabilitas Puzzle:</strong> Memastikan puzzle dapat diselesaikan berdasarkan jumlah inversi genap/ganjil (permutasi genap/ganjil).</li>
-                <li><strong>Penyelesaian Puzzle:</strong> Menggunakan algoritma BFS yang dioptimalkan untuk menemukan solusi.</li>
-                <li><strong>Input Interaktif:</strong> Pilihan untuk menghasilkan puzzle acak atau memasukkan puzzle sendiri.</li>
-                <li><b>Kontrol Mouse Lengkap:</b> Drag & drop untuk memindahkan angka dengan mouse.</li>
-                <li><b>Upload Gambar:</b> Upload gambar dari drive lokal sebagai background puzzle.</li>
-                <li><b>Angka Tetap Tampil:</b> Angka selalu terlihat di atas gambar untuk memudahkan navigasi.</li>
-                <li><b>Gambar Utuh:</b> Saat puzzle terurut, gambar lengkap muncul termasuk kotak kosong (tidak ada angka) digunakan melakukan perpindahan bagian kotak puzzle.</li>
-                <li><b>Animasi Smooth:</b> Transisi dan animasi yang halus untuk pengalaman pengguna yang lebih baik.</li>
-                <li><b>Informasi Penyelesaian:</b> Menampilkan jumlah langkah yang dilakukan solver otomatis.</li>
-                <li><b>Counter Langkah Animasi:</b> Animasi counter yang menunjukkan perkembangan langkah penyelesaian.</li>
-                <li><b>Efek Balon Warna-warni:</b> Ketika puzzle selesai, balon warna-warni akan muncul untuk memberikan semangat.</li>
-                <li><b>Deskripsi program dan tampilan puzzle</b>: Menggunakan elemen HTML dan CSS.</li>
-                <li><b>Kecepatan animasi</b>: Langkah dapat diatur menggunakan slider.</li>
-            </ul>
-            
-            <h3>Antarmuka Interaktif</h3>
-            <ol>
-                <li><b>Toggle Deskripsi</b>: Tombol untuk menampilkan atau menyembunyikan deskripsi program.</li>
-                <li><b>Grid Puzzle</b>: Menampilkan puzzle dalam format grid $3\times 3$ dengan tile yang dapat digeser.</li>
-                <li><b>Input Pengguna</b>:
-                    <ul>
-                        <li><b>ToggleButtons</b>: Pilihan antara input <span class="button-example">Puzzle Acak</span> atau <span class="button-example">Puzzle Mandiri</span>.</li>
-                        <li><b>Text Input</b>: Untuk memasukkan puzzle secara mandiri/manual.</li>
-                        <li><b>Upload Gambar</b>: Untuk memilih gambar dari drive lokal.</li>
-                        <li><b>Slider</b>: Untuk mengatur kecepatan animasi.</li>
-                        <li>Button <span class="button-example">Start Game</span>: Untuk menjalankan permainan.</li>
-                    </ul>
-                </li>
-            </ol>
-            
-            <p><strong>Contoh Puzzle:</strong></p>
-            <p><strong>Solvable:</strong> [1, 2, 3, 4, 5, 6, 0, 7, 8] (Inversi: 1, genap)</p>
-            <p><strong>Unsolvable:</strong> [1, 2, 3, 4, 5, 6, 8, 7, 0] (Inversi: 1, ganjil)</p>
+            <p><strong>Fitur Utama:</strong> Puzzle acak yang selalu solvable, drag & drop, upload gambar, BFS solver, dan 🎆 <strong>animasi kembang api 15 detik + toast ucapan selamat</strong> hanya saat menyelesaikan manual!</p>
         </div>
         
         <div class="section">
             <div class="game-info">
-                <h2>Puzzle</h2>
+                <h2>🎲 Puzzle 3x3</h2>
                 <div class="stats" id="stats-container">
                     <p id="inversions-info">Inversi: -</p>
                     <p id="solvability-info">Status: -</p>
@@ -1161,7 +716,21 @@
             </div>
             
             <div class="instructions">
-                <p><strong>Cara Bermain:</strong> Klik atau drag angka untuk memindahkannya ke kotak kosong/gambar tidak ada angka yang bersebelahan</p>
+                <p><strong>Cara Bermain:</strong> Klik atau drag angka ke kotak kosong yang bersebelahan</p>
+                <p style="font-size: 0.9rem; margin-top: 5px;">🎆 <strong>Kembang api 15 detik + toast ucapan selamat hanya saat Anda menyelesaikan sendiri!</strong></p>
+            </div>
+            
+            <!-- Slider pengatur durasi kembang api -->
+            <div class="fireworks-control">
+                <div class="slider-container">
+                    <label>🎆 Durasi Kembang Api:</label>
+                    <input type="range" id="fireworks-duration" min="5" max="30" value="15" step="1">
+                    <span id="duration-value" class="duration-value">15</span>
+                    <span>detik</span>
+                </div>
+                <p style="font-size: 0.8rem; text-align: center; margin-top: 5px; color: #e67e22;">
+                    ✨ Semakin lama durasi, semakin meriah perayaannya! ✨
+                </p>
             </div>
             
             <div class="solution-info" id="solution-info" style="display: none;">
@@ -1172,74 +741,226 @@
                     <span>/</span>
                     <div class="counter" id="total-steps">0</div>
                 </div>
-                <div class="progress-container">
-                    <div class="progress-bar" id="progress-bar"></div>
-                </div>
+                <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
             </div>
             
-            <div class="puzzle-container" id="puzzle-container">
-                <!-- Tiles akan diisi oleh JavaScript -->
-            </div>
+            <div class="puzzle-container" id="puzzle-container"></div>
             
             <div class="controls">
                 <div class="control-group">
-                    <button id="random-puzzle-btn">Puzzle Acak</button>
-                    <button id="custom-puzzle-btn">Puzzle Mandiri</button>
+                    <button id="random-puzzle-btn">🎲 Puzzle Acak</button>
+                    <button id="custom-puzzle-btn">✏️ Puzzle Mandiri</button>
                 </div>
-                
                 <div class="input-group" id="custom-input-container" style="display: none;">
-                    <label for="custom-puzzle-input">Masukkan Puzzle (contoh: 1 2 3 4 5 6 0 7 8):</label>
                     <input type="text" id="custom-puzzle-input" placeholder="1 2 3 4 5 6 0 7 8">
                 </div>
-                
                 <div class="input-group">
-                    <label for="image-upload">Upload Gambar Puzzle:</label>
+                    <label>🖼️ Upload Gambar:</label>
                     <input type="file" id="image-upload" accept="image/*">
-                    <div class="image-preview" id="image-preview"></div>
                 </div>
-                
                 <div class="slider-container">
-                    <label for="animation-speed">Kecepatan Animasi:</label>
+                    <label>⚡ Kecepatan Animasi Puzzle:</label>
                     <input type="range" id="animation-speed" min="1" max="10" value="4">
                     <span id="speed-value">4</span>
                 </div>
-                
                 <div class="control-group">
-                    <button id="start-game-btn">Mulai Game</button>
-                    <button id="solve-puzzle-btn" disabled>
-                        <span id="solve-text">Selesaikan Otomatis</span>
-                        <span id="solve-loading" class="loading" style="display: none;"></span>
-                    </button>
-                    <button id="reset-puzzle-btn">Reset Puzzle</button>
-                    <button id="hint-btn" disabled>Bantuan</button>
+                    <button id="start-game-btn">🚀 Mulai Game</button>
+                    <button id="solve-puzzle-btn" disabled>🤖 Selesaikan Otomatis</button>
+                    <button id="reset-puzzle-btn">🔄 Reset Puzzle</button>
+                    <button id="hint-btn" disabled>💡 Bantuan</button>
                 </div>
             </div>
             
-            <div class="message info" id="message-container">
-                Pesan akan muncul di sini
-            </div>
+            <div class="message info" id="message-container">Pesan akan muncul di sini</div>
         </div>
     </div>
 
     <script>
-        // Konstanta dan variabel global
+        // ==================== KEMBANG API DENGAN DURASI BISA DIATUR ====================
+        const fwCanvas = document.getElementById('fireworks-canvas');
+        let fwCtx = fwCanvas.getContext('2d');
+        let particles = [];
+        let fwActive = false;
+        let fwAnimationId = null;
+        
+        // Parameter kembang api yang bisa disesuaikan
+        let fireworksDuration = 15000; // Default 15 detik
+        let fireworksDensity = 0.12;   // Kepadatan ledakan (12% per frame)
+        
+        // Elemen slider durasi
+        const durationSlider = document.getElementById('fireworks-duration');
+        const durationValue = document.getElementById('duration-value');
+        
+        if (durationSlider) {
+            durationSlider.addEventListener('input', () => {
+                fireworksDuration = parseInt(durationSlider.value) * 1000;
+                durationValue.textContent = durationSlider.value;
+            });
+        }
+        
+        function initFireworksCanvas() {
+            fwCanvas.width = window.innerWidth;
+            fwCanvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', () => {
+            fwCanvas.width = window.innerWidth;
+            fwCanvas.height = window.innerHeight;
+        });
+        
+        function createFirework() {
+            const x = Math.random() * fwCanvas.width;
+            const y = Math.random() * fwCanvas.height * 0.6;
+            const color = `hsl(${Math.random() * 360}, 85%, 65%)`;
+            
+            // Lebih banyak partikel per ledakan (60-110 partikel)
+            const particleCount = 60 + Math.floor(Math.random() * 50);
+            
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const speed = 2 + Math.random() * 5;
+                particles.push({
+                    x: x, y: y,
+                    vx: Math.cos(angle) * speed * (0.5 + Math.random()),
+                    vy: Math.sin(angle) * speed * (0.5 + Math.random()),
+                    life: 1,
+                    maxLife: 1,
+                    color: color,
+                    size: 2 + Math.random() * 4
+                });
+            }
+        }
+        
+        function updateFireworks() {
+            if (!fwActive) return;
+            
+            // Efek trail (jejak) dengan transparansi
+            fwCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            fwCtx.fillRect(0, 0, fwCanvas.width, fwCanvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.08; // Gravitasi
+                p.life -= 0.008; // Partikel lebih awet (0.015 -> 0.008)
+                
+                if (p.life <= 0 || p.y > fwCanvas.height + 100 || p.x < -100 || p.x > fwCanvas.width + 100) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                
+                fwCtx.globalAlpha = p.life;
+                fwCtx.fillStyle = p.color;
+                fwCtx.beginPath();
+                fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                fwCtx.fill();
+            }
+            
+            // Buat kembang api baru dengan kepadatan yang lebih tinggi
+            if (fwActive && Math.random() < fireworksDensity) {
+                createFirework();
+            }
+            
+            fwCtx.globalAlpha = 1;
+            fwAnimationId = requestAnimationFrame(updateFireworks);
+        }
+        
+        function startFireworks() {
+            if (fwActive) return;
+            initFireworksCanvas();
+            fwCanvas.style.display = 'block';
+            fwActive = true;
+            particles = [];
+            updateFireworks();
+            
+            // Durasi sesuai pengaturan slider (default 15 detik)
+            setTimeout(() => {
+                fwActive = false;
+                setTimeout(() => {
+                    if (fwAnimationId) cancelAnimationFrame(fwAnimationId);
+                    fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+                    fwCanvas.style.display = 'none';
+                    fwAnimationId = null;
+                }, 5000); // Partikel terakhir hilang setelah 5 detik
+            }, fireworksDuration);
+        }
+        
+        function stopFireworks() {
+            fwActive = false;
+            if (fwAnimationId) {
+                cancelAnimationFrame(fwAnimationId);
+                fwAnimationId = null;
+            }
+            if (fwCtx) fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+            fwCanvas.style.display = 'none';
+            particles = [];
+        }
+        // ==================== END FIREWORKS ====================
+        
+        // ==================== UCAPAN SELAMAT (TOAST) ====================
+        const congratsToast = document.getElementById('congratsToast');
+        const victoryBanner = document.getElementById('victoryBanner');
+        let victoryTriggered = false;
+        
+        function showToastCongrats(moves) {
+            // Update statistik di toast
+            document.getElementById('toastMoves').textContent = moves;
+            
+            // Tentukan tingkat kesulitan
+            let difficulty = '';
+            if (moves <= 20) difficulty = '🌟 Luar Biasa!';
+            else if (moves <= 50) difficulty = '👍 Bagus Sekali!';
+            else if (moves <= 100) difficulty = '📈 Cukup Baik';
+            else difficulty = '💪 Tetap Semangat!';
+            
+            document.getElementById('toastDifficulty').textContent = difficulty;
+            
+            // Tampilkan toast dengan animasi
+            congratsToast.classList.add('show');
+            
+            // Auto hide setelah 10 detik
+            setTimeout(() => {
+                if (congratsToast.classList.contains('show')) {
+                    congratsToast.classList.remove('show');
+                }
+            }, 10000);
+        }
+        
+        function hideToast() {
+            congratsToast.classList.remove('show');
+        }
+        
+        function hideBanner() {
+            victoryBanner.style.display = 'none';
+        }
+        
+        function resetAfterVictory() {
+            hideToast();
+            hideBanner();
+            resetPuzzle();
+            victoryTriggered = false;
+        }
+        
+        // Tombol event listeners untuk toast
+        document.getElementById('playAgainBtn').addEventListener('click', () => {
+            resetAfterVictory();
+        });
+        
+        document.getElementById('closeToastBtn').addEventListener('click', () => {
+            hideToast();
+        });
+        // ==================== END UCAPAN SELAMAT ====================
+        
+        // ==================== GAME LOGIC ====================
         const TARGET_STATE = [1, 2, 3, 4, 5, 6, 7, 8, 0];
         let currentPuzzle = [...TARGET_STATE];
         let moves = 0;
-        let startTime = 0;
         let isSolving = false;
         let solutionPath = [];
-        let currentStep = 0;
         let animationSpeed = 4;
-        let isDragging = false;
-        let dragStartTile = null;
-        let totalSolutionSteps = 0;
-        let currentSolutionStep = 0;
-        let balloonsActive = false;
-        let puzzleImage = null;
         let imageDataUrl = null;
-
-        // Elemen DOM
+        
         const puzzleContainer = document.getElementById('puzzle-container');
         const randomPuzzleBtn = document.getElementById('random-puzzle-btn');
         const customPuzzleBtn = document.getElementById('custom-puzzle-btn');
@@ -1257,802 +978,432 @@
         const messageContainer = document.getElementById('message-container');
         const toggleDescriptionBtn = document.getElementById('toggle-description-btn');
         const descriptionContent = document.getElementById('description-content');
-        const solveText = document.getElementById('solve-text');
-        const solveLoading = document.getElementById('solve-loading');
-        const statsContainer = document.getElementById('stats-container');
+        const educationDropdownBtn = document.getElementById('educationDropdownBtn');
+        const educationDropdownContent = document.getElementById('educationDropdownContent');
+        const imageUpload = document.getElementById('image-upload');
         const solutionInfo = document.getElementById('solution-info');
-        const solutionStepsInfo = document.getElementById('solution-steps-info');
         const stepCounter = document.getElementById('step-counter');
         const totalSteps = document.getElementById('total-steps');
         const progressBar = document.getElementById('progress-bar');
-        const imageUpload = document.getElementById('image-upload');
-        const imagePreview = document.getElementById('image-preview');
         
-        // Elemen dropdown pendidikan
-        const educationDropdownBtn = document.getElementById('educationDropdownBtn');
-        const educationDropdownContent = document.getElementById('educationDropdownContent');
-
-        // Warna-warni untuk balon
-        const balloonColors = ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2', 
-                               '#EF476F', '#FF9A76', '#7BC950', '#FFD3BA', '#A0E7E5'];
-
-        // Inisialisasi
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             renderPuzzle(currentPuzzle);
             setupEventListeners();
             updateSolvabilityInfo();
-            
-            // Tambahkan styling untuk contoh button dalam deskripsi
-            const style = document.createElement('style');
-            style.textContent = `
-                .button-example {
-                    display: inline-block;
-                    background-color: #3498db;
-                    color: white;
-                    padding: 0.2rem 0.7rem;
-                    border-radius: 15px;
-                    font-size: 0.9rem;
-                    margin: 0 2px;
-                    font-weight: 600;
-                }
-            `;
-            document.head.appendChild(style);
+            initFireworksCanvas();
         });
-
-        // Setup event listeners
+        
         function setupEventListeners() {
-            randomPuzzleBtn.addEventListener('click', generateRandomPuzzle);
-            customPuzzleBtn.addEventListener('click', toggleCustomInput);
-            startGameBtn.addEventListener('click', startGame);
+            randomPuzzleBtn.addEventListener('click', () => {
+                hideToast();
+                hideBanner();
+                generateRandomPuzzle();
+                victoryTriggered = false;
+                stopFireworks();
+            });
+            customPuzzleBtn.addEventListener('click', () => {
+                customInputContainer.style.display = customInputContainer.style.display === 'block' ? 'none' : 'block';
+                hideToast();
+                hideBanner();
+                victoryTriggered = false;
+                stopFireworks();
+            });
+            startGameBtn.addEventListener('click', () => {
+                startGame();
+                hideToast();
+                hideBanner();
+                victoryTriggered = false;
+                stopFireworks();
+            });
             solvePuzzleBtn.addEventListener('click', solvePuzzle);
-            resetPuzzleBtn.addEventListener('click', resetPuzzle);
+            resetPuzzleBtn.addEventListener('click', () => {
+                resetPuzzle();
+                hideToast();
+                hideBanner();
+                victoryTriggered = false;
+                stopFireworks();
+            });
             hintBtn.addEventListener('click', showHint);
-            animationSpeedSlider.addEventListener('input', updateAnimationSpeed);
-            toggleDescriptionBtn.addEventListener('click', toggleDescription);
+            animationSpeedSlider.addEventListener('input', () => {
+                animationSpeed = parseInt(animationSpeedSlider.value);
+                speedValue.textContent = animationSpeed;
+            });
+            toggleDescriptionBtn.addEventListener('click', () => {
+                descriptionContent.classList.toggle('show');
+                toggleDescriptionBtn.textContent = descriptionContent.classList.contains('show') ? 'Sembunyikan Deskripsi' : 'Tampilkan Deskripsi';
+            });
+            educationDropdownBtn.addEventListener('click', () => {
+                educationDropdownContent.classList.toggle('show');
+                educationDropdownBtn.classList.toggle('active');
+            });
             imageUpload.addEventListener('change', handleImageUpload);
             
-            // Event listener untuk dropdown pendidikan
-            educationDropdownBtn.addEventListener('click', toggleEducationDropdown);
-            
-            // Event delegation untuk tile
-            puzzleContainer.addEventListener('click', function(event) {
-                const tile = event.target.closest('.tile');
-                if (tile && !tile.classList.contains('empty')) {
-                    handleTileClick(event);
-                }
+            puzzleContainer.addEventListener('click', (e) => {
+                const tile = e.target.closest('.tile');
+                if (tile && !tile.classList.contains('empty') && !isSolving && !victoryTriggered) handleTileClick(tile);
             });
             
-            // Event untuk drag and drop
             setupDragAndDrop();
         }
-
-        // Toggle dropdown pendidikan
-        function toggleEducationDropdown() {
-            educationDropdownContent.classList.toggle('show');
-            educationDropdownBtn.classList.toggle('active');
-        }
-
-        // Handle upload gambar
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
+        
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    imageDataUrl = e.target.result;
-                    imagePreview.textContent = `Gambar: ${file.name}`;
-                    puzzleImage = new Image();
-                    puzzleImage.src = imageDataUrl;
-                    puzzleImage.onload = function() {
-                        renderPuzzle(currentPuzzle);
-                        showMessage('Gambar berhasil diupload!', 'success');
-                    };
+                reader.onload = (ev) => {
+                    imageDataUrl = ev.target.result;
+                    renderPuzzle(currentPuzzle);
+                    showMessage('Gambar berhasil diupload!', 'success');
                 };
                 reader.readAsDataURL(file);
             }
         }
-
-        // Setup drag and drop functionality
+        
         function setupDragAndDrop() {
             let draggedTile = null;
-            
-            // Event listener untuk mulai drag
-            document.addEventListener('dragstart', function(event) {
-                const tile = event.target.closest('.tile');
-                if (tile && !tile.classList.contains('empty')) {
+            document.addEventListener('dragstart', (e) => {
+                const tile = e.target.closest('.tile');
+                if (tile && !tile.classList.contains('empty') && !victoryTriggered) {
                     draggedTile = tile;
-                    tile.classList.add('dragging');
-                    
-                    // Set data transfer untuk kompatibilitas browser
-                    event.dataTransfer.setData('text/plain', tile.dataset.index);
-                    event.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', tile.dataset.index);
                 }
             });
-            
-            // Event listener selama drag
-            document.addEventListener('dragover', function(event) {
-                event.preventDefault();
-                
-                // Highlight tile yang valid untuk di-drop
-                if (draggedTile) {
-                    const emptyIndex = currentPuzzle.indexOf(0);
-                    const draggedIndex = parseInt(draggedTile.dataset.index);
-                    
-                    if (isAdjacent(draggedIndex, emptyIndex)) {
-                        const emptyTile = document.querySelector(`.tile.empty`);
-                        if (emptyTile) {
-                            emptyTile.classList.add('highlight');
-                        }
-                    }
-                }
-            });
-            
-            // Event listener saat keluar dari area drag
-            document.addEventListener('dragleave', function(event) {
-                // Hapus highlight dari tile kosong
-                const emptyTile = document.querySelector(`.tile.empty`);
-                if (emptyTile) {
-                    emptyTile.classList.remove('highlight');
-                }
-            });
-            
-            // Event listener untuk drop
-            document.addEventListener('drop', function(event) {
-                event.preventDefault();
-                
-                if (isSolving) return;
-                
-                // Hapus highlight dari tile kosong
-                const emptyTile = document.querySelector(`.tile.empty`);
-                if (emptyTile) {
-                    emptyTile.classList.remove('highlight');
-                }
-                
-                if (draggedTile) {
+            document.addEventListener('dragover', (e) => e.preventDefault());
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (draggedTile && !isSolving && !victoryTriggered) {
                     const draggedIndex = parseInt(draggedTile.dataset.index);
                     const emptyIndex = currentPuzzle.indexOf(0);
-                    
                     if (isAdjacent(draggedIndex, emptyIndex)) {
-                        // Tambahkan animasi slide
-                        const direction = getSlideDirection(draggedIndex, emptyIndex);
+                        const direction = getDirection(draggedIndex, emptyIndex);
                         draggedTile.classList.add('moving', direction);
-                        
-                        // Tunggu animasi selesai sebelum menukar posisi
                         setTimeout(() => {
                             swapTiles(draggedIndex, emptyIndex);
                             moves++;
                             updateStats();
-                            
-                            if (isPuzzleSolved()) {
-                                showMessage('Selamat! Puzzle berhasil diselesaikan!', 'success');
-                                solvePuzzleBtn.disabled = true;
-                                hintBtn.disabled = true;
-                                createCelebration();
+                            if (isPuzzleSolved() && !victoryTriggered) {
+                                victoryTriggered = true;
+                                handleVictory();
                             }
                         }, 400);
                     }
-                    
                     draggedTile.classList.remove('dragging');
                     draggedTile = null;
                 }
             });
-            
-            // Event listener untuk akhir drag
-            document.addEventListener('dragend', function(event) {
-                const tile = event.target.closest('.tile');
-                if (tile) {
-                    tile.classList.remove('dragging');
-                    
-                    // Hapus highlight dari tile kosong
-                    const emptyTile = document.querySelector(`.tile.empty`);
-                    if (emptyTile) {
-                        emptyTile.classList.remove('highlight');
-                    }
-                }
-            });
-        }
-
-        // Dapatkan arah slide berdasarkan posisi
-        function getSlideDirection(fromIndex, toIndex) {
-            const fromRow = Math.floor(fromIndex / 3);
-            const fromCol = fromIndex % 3;
-            const toRow = Math.floor(toIndex / 3);
-            const toCol = toIndex % 3;
-            
-            if (fromRow === toRow) {
-                return fromCol < toCol ? 'slide-right' : 'slide-left';
-            } else {
-                return fromRow < toRow ? 'slide-down' : 'slide-up';
-            }
-        }
-
-        // Buat efek balon warna-warni yang muncul lebih lama
-        function createBalloons() {
-            if (balloonsActive) return;
-            
-            balloonsActive = true;
-            const balloonCount = 30;
-            const containerWidth = window.innerWidth;
-            
-            for (let i = 0; i < balloonCount; i++) {
-                setTimeout(() => {
-                    createSingleBalloon(containerWidth);
-                }, i * 200);
-            }
-            
-            setTimeout(() => {
-                balloonsActive = false;
-            }, 15000);
         }
         
-        // Buat satu balon
-        function createSingleBalloon(containerWidth) {
-            const balloon = document.createElement('div');
-            balloon.className = 'balloon';
-            
-            const color = balloonColors[Math.floor(Math.random() * balloonColors.length)];
-            balloon.style.backgroundColor = color;
-            
-            const size = 30 + Math.random() * 30;
-            balloon.style.width = `${size}px`;
-            balloon.style.height = `${size * 1.2}px`;
-            
-            const left = Math.random() * containerWidth;
-            balloon.style.left = `${left}px`;
-            
-            const duration = 8 + Math.random() * 7;
-            balloon.style.animation = `balloonFloat ${duration}s linear forwards`;
-            
-            document.body.appendChild(balloon);
-            
-            setTimeout(() => {
-                if (balloon.parentNode) {
-                    balloon.parentNode.removeChild(balloon);
-                }
-            }, duration * 1000);
+        function getDirection(from, to) {
+            const fr = Math.floor(from / 3), fc = from % 3;
+            const tr = Math.floor(to / 3), tc = to % 3;
+            if (fr === tr) return fc < tc ? 'slide-right' : 'slide-left';
+            return fr < tr ? 'slide-down' : 'slide-up';
         }
-
-        // Buat teks perayaan
-        function createCelebrationText() {
-            const celebrationText = document.createElement('div');
-            celebrationText.className = 'celebration-text';
-            celebrationText.innerHTML = 'SELAMAT!<span>Puzzle terselesaikan!</span>';
-            
-            document.body.appendChild(celebrationText);
-            
-            setTimeout(() => {
-                if (celebrationText.parentNode) {
-                    celebrationText.parentNode.removeChild(celebrationText);
-                }
-            }, 3000);
-        }
-
-        // Buat efek konfeti cepat
-        function createQuickConfetti() {
-            const container = document.querySelector('.container');
-            const confettiCount = 30;
-            
-            for (let i = 0; i < confettiCount; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.backgroundColor = balloonColors[Math.floor(Math.random() * balloonColors.length)];
-                confetti.style.animationDelay = Math.random() * 0.5 + 's';
-                container.appendChild(confetti);
-                
-                setTimeout(() => {
-                    confetti.remove();
-                }, 2000);
-            }
-        }
-
-        // Gabungkan semua efek perayaan
-        function createCelebration() {
-            createCelebrationText();
-            createQuickConfetti();
-            createBalloons();
-        }
-
-        // Toggle deskripsi program
-        function toggleDescription() {
-            descriptionContent.classList.toggle('show');
-            toggleDescriptionBtn.textContent = descriptionContent.classList.contains('show') 
-                ? 'Sembunyikan Deskripsi Program' 
-                : 'Tampilkan Deskripsi Program';
-        }
-
-        // Mendapatkan posisi background untuk tile berdasarkan nilai angka
-        function getBackgroundPosition(value) {
-            // Posisi dalam persentase untuk background-size 300% 300%
-            // Baris 0 (atas): 0% 0%, 50% 0%, 100% 0%
-            // Baris 1 (tengah): 0% 50%, 50% 50%, 100% 50%
-            // Baris 2 (bawah): 0% 100%, 50% 100%, 100% 100%
-            
-            const row = Math.floor((value - 1) / 3);
-            const col = (value - 1) % 3;
-            
-            // Untuk value 0 (kotak kosong) - posisi pojok kanan bawah (baris 2, kolom 2)
-            if (value === 0) {
-                return '100% 100%';
-            }
-            
-            // Hitung posisi berdasarkan baris dan kolom
-            const yPosition = row === 0 ? '0%' : (row === 1 ? '50%' : '100%');
-            const xPosition = col === 0 ? '0%' : (col === 1 ? '50%' : '100%');
-            
-            return `${xPosition} ${yPosition}`;
-        }
-
-        // Render puzzle ke grid dengan gambar jika ada
-        function renderPuzzle(puzzle) {
-            puzzleContainer.innerHTML = '';
-            
-            puzzle.forEach((value, index) => {
-                const tile = document.createElement('div');
-                tile.className = value === 0 ? 'tile empty' : 'tile';
-                
-                // Selalu tampilkan angka di dalam tile
-                tile.textContent = value === 0 ? '' : value;
-                
-                tile.dataset.index = index;
-                tile.dataset.value = value;
-                
-                // Jika ada gambar yang diupload, atur background
-                if (imageDataUrl) {
-                    tile.classList.add('has-image');
-                    tile.style.backgroundImage = `url('${imageDataUrl}')`;
-                    
-                    // Untuk tile dengan angka, gunakan posisi berdasarkan nilai
-                    // Untuk tile kosong (0), gunakan posisi pojok kanan bawah
-                    if (value === 0) {
-                        // Kotak kosong menampilkan potongan pojok kanan bawah
-                        tile.style.backgroundPosition = '100% 100%';
-                    } else {
-                        tile.style.backgroundPosition = getBackgroundPosition(value);
-                    }
-                }
-                
-                if (value !== 0) {
-                    tile.draggable = true;
-                }
-                
-                puzzleContainer.appendChild(tile);
-            });
-        }
-
-        // Handle klik tile
-        function handleTileClick(event) {
-            if (isSolving) return;
-            
-            const tile = event.target.closest('.tile');
-            if (!tile) return;
-            
-            const clickedIndex = parseInt(tile.dataset.index);
-            const emptyIndex = currentPuzzle.indexOf(0);
-            
-            if (isAdjacent(clickedIndex, emptyIndex)) {
-                const direction = getSlideDirection(clickedIndex, emptyIndex);
+        
+        function handleTileClick(tile) {
+            const idx = parseInt(tile.dataset.index);
+            const emptyIdx = currentPuzzle.indexOf(0);
+            if (isAdjacent(idx, emptyIdx)) {
+                const direction = getDirection(idx, emptyIdx);
                 tile.classList.add('moving', direction);
-                
                 setTimeout(() => {
-                    swapTiles(clickedIndex, emptyIndex);
+                    swapTiles(idx, emptyIdx);
                     moves++;
                     updateStats();
-                    
-                    if (isPuzzleSolved()) {
-                        showMessage('Selamat! Puzzle berhasil diselesaikan!', 'success');
-                        solvePuzzleBtn.disabled = true;
-                        hintBtn.disabled = true;
-                        createCelebration();
+                    if (isPuzzleSolved() && !victoryTriggered) {
+                        victoryTriggered = true;
+                        handleVictory();
                     }
                 }, 400);
             }
         }
-
-        // Cek apakah dua tile bersebelahan
-        function isAdjacent(index1, index2) {
-            const row1 = Math.floor(index1 / 3);
-            const col1 = index1 % 3;
-            const row2 = Math.floor(index2 / 3);
-            const col2 = index2 % 3;
-            
-            return (Math.abs(row1 - row2) === 1 && col1 === col2) || 
-                   (Math.abs(col1 - col2) === 1 && row1 === row2);
+        
+        function isAdjacent(i1, i2) {
+            const r1 = Math.floor(i1/3), c1 = i1%3;
+            const r2 = Math.floor(i2/3), c2 = i2%3;
+            return (Math.abs(r1-r2) === 1 && c1 === c2) || (Math.abs(c1-c2) === 1 && r1 === r2);
         }
-
-        // Tukar posisi dua tile
-        function swapTiles(index1, index2) {
-            [currentPuzzle[index1], currentPuzzle[index2]] = [currentPuzzle[index2], currentPuzzle[index1]];
+        
+        function swapTiles(i1, i2) {
+            [currentPuzzle[i1], currentPuzzle[i2]] = [currentPuzzle[i2], currentPuzzle[i1]];
             renderPuzzle(currentPuzzle);
         }
-
-        // Cek apakah puzzle sudah terselesaikan
-        function isPuzzleSolved() {
-            for (let i = 0; i < TARGET_STATE.length; i++) {
-                if (currentPuzzle[i] !== TARGET_STATE[i]) {
-                    return false;
+        
+        function getBackgroundPosition(val) {
+            if (val === 0) return '100% 100%';
+            const row = Math.floor((val-1)/3), col = (val-1)%3;
+            const y = row === 0 ? '0%' : (row === 1 ? '50%' : '100%');
+            const x = col === 0 ? '0%' : (col === 1 ? '50%' : '100%');
+            return `${x} ${y}`;
+        }
+        
+        function renderPuzzle(puzzle) {
+            puzzleContainer.innerHTML = '';
+            puzzle.forEach((val, idx) => {
+                const tile = document.createElement('div');
+                tile.className = val === 0 ? 'tile empty' : 'tile';
+                tile.textContent = val === 0 ? '' : val;
+                tile.dataset.index = idx;
+                if (imageDataUrl) {
+                    tile.classList.add('has-image');
+                    tile.style.backgroundImage = `url('${imageDataUrl}')`;
+                    tile.style.backgroundPosition = getBackgroundPosition(val);
                 }
-            }
+                if (val !== 0) tile.draggable = true;
+                puzzleContainer.appendChild(tile);
+            });
+        }
+        
+        function isPuzzleSolved() {
+            for (let i = 0; i < 9; i++) if (currentPuzzle[i] !== TARGET_STATE[i]) return false;
             return true;
         }
-
-        // Generate puzzle acak
+        
+        function handleVictory() {
+            // 1. Kembang api muncul DULU dengan durasi sesuai slider
+            startFireworks();
+            createBalloons();
+            createQuickConfetti();
+            
+            // 2. Banner di atas puzzle langsung muncul
+            victoryBanner.style.display = 'block';
+            
+            // 3. Toast ucapan selamat muncul setelah 1.5 detik (kembang api sudah berjalan)
+            setTimeout(() => {
+                showToastCongrats(moves);
+            }, 1500);
+            
+            solvePuzzleBtn.disabled = true;
+            hintBtn.disabled = true;
+            showMessage('🎉 SELAMAT! Anda berhasil menyelesaikan puzzle secara manual! 🎉', 'success');
+        }
+        
         function generateRandomPuzzle() {
             let puzzle;
-            let attempts = 0;
-            const maxAttempts = 100;
-            
             do {
                 puzzle = [...TARGET_STATE];
-                shuffleArray(puzzle);
-                attempts++;
-            } while ((!isSolvable(puzzle) || isPuzzleSolved(puzzle)) && attempts < maxAttempts);
-            
+                for (let i = puzzle.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [puzzle[i], puzzle[j]] = [puzzle[j], puzzle[i]];
+                }
+            } while (!isSolvable(puzzle) || arraysEqual(puzzle, TARGET_STATE));
             currentPuzzle = puzzle;
             renderPuzzle(currentPuzzle);
             resetGameStats();
-            updateSolvabilityInfo();
             solvePuzzleBtn.disabled = false;
             hintBtn.disabled = false;
-            hideMessage();
-            hideSolutionInfo();
+            victoryTriggered = false;
         }
-
-        // Acak array (Fisher-Yates shuffle)
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-
-        // Toggle input custom
-        function toggleCustomInput() {
-            const isVisible = customInputContainer.style.display === 'block';
-            customInputContainer.style.display = isVisible ? 'none' : 'block';
-            
-            if (isVisible) {
-                customPuzzleInput.value = '';
-            }
-        }
-
-        // Mulai permainan
+        
         function startGame() {
             if (customInputContainer.style.display === 'block') {
-                try {
-                    const input = customPuzzleInput.value.trim();
-                    if (!input) {
-                        showMessage('Masukkan puzzle terlebih dahulu!', 'error');
+                const input = customPuzzleInput.value.trim();
+                if (input) {
+                    const puzzle = input.split(/[\s,]+/).map(Number);
+                    if (puzzle.length === 9 && new Set(puzzle).size === 9 && puzzle.every(n => n >= 0 && n <= 8)) {
+                        currentPuzzle = puzzle;
+                    } else {
+                        showMessage('Input tidak valid!', 'error');
                         return;
                     }
-                    
-                    const puzzle = input.split(/[\s,]+/).map(Number);
-                    
-                    if (puzzle.length !== 9) {
-                        throw new Error('Puzzle harus memiliki 9 angka');
-                    }
-                    
-                    if (new Set(puzzle).size !== 9) {
-                        throw new Error('Puzzle tidak boleh memiliki angka duplikat');
-                    }
-                    
-                    if (!puzzle.every(num => num >= 0 && num <= 8)) {
-                        throw new Error('Puzzle hanya boleh berisi angka 0-8');
-                    }
-                    
-                    currentPuzzle = puzzle;
-                } catch (error) {
-                    showMessage('Input tidak valid! ' + error.message, 'error');
-                    return;
                 }
             }
-            
             renderPuzzle(currentPuzzle);
             resetGameStats();
-            updateSolvabilityInfo();
             solvePuzzleBtn.disabled = false;
             hintBtn.disabled = false;
-            hideMessage();
-            hideSolutionInfo();
+            solutionInfo.style.display = 'none';
+            victoryTriggered = false;
         }
-
-        // Selesaikan puzzle dengan algoritma BFS yang lebih cepat
+        
+        function resetPuzzle() {
+            currentPuzzle = [...TARGET_STATE];
+            renderPuzzle(currentPuzzle);
+            resetGameStats();
+            solvePuzzleBtn.disabled = true;
+            hintBtn.disabled = true;
+            solutionInfo.style.display = 'none';
+            isSolving = false;
+            victoryTriggered = false;
+        }
+        
         function solvePuzzle() {
             if (isSolving) return;
-            
-            const solvable = isSolvable(currentPuzzle);
-            if (!solvable) {
+            if (!isSolvable(currentPuzzle)) {
                 showMessage('Puzzle ini tidak dapat diselesaikan!', 'error');
                 return;
             }
-            
             isSolving = true;
             solvePuzzleBtn.disabled = true;
             startGameBtn.disabled = true;
             hintBtn.disabled = true;
-            solveText.textContent = 'Memproses...';
-            solveLoading.style.display = 'inline-block';
             
             setTimeout(() => {
-                try {
-                    solutionPath = bfsSolve(currentPuzzle, TARGET_STATE);
-                    
-                    if (solutionPath.length === 0) {
-                        showMessage('Tidak ditemukan solusi untuk puzzle ini!', 'error');
-                        resetSolveButton();
-                        return;
-                    }
-                    
-                    totalSolutionSteps = solutionPath.length - 1;
-                    showSolutionInfo(totalSolutionSteps);
-                    
-                    currentSolutionStep = 0;
-                    updateCounter(0);
-                    
-                    animateSolution(solutionPath, 0);
-                } catch (error) {
-                    console.error('Error during solving:', error);
-                    showMessage('Terjadi kesalahan saat menyelesaikan puzzle.', 'error');
+                const path = bfsSolve(currentPuzzle, TARGET_STATE);
+                if (path.length === 0) {
+                    showMessage('Tidak ditemukan solusi!', 'error');
                     resetSolveButton();
+                    return;
                 }
+                totalSolutionSteps = path.length - 1;
+                solutionInfo.style.display = 'block';
+                totalSteps.textContent = totalSolutionSteps;
+                animateSolution(path, 0);
             }, 100);
         }
-
-        // Tampilkan informasi solusi
-        function showSolutionInfo(steps) {
-            solutionStepsInfo.textContent = `Penyelesaian otomatis akan membutuhkan ${steps} langkah`;
-            solutionInfo.style.display = 'block';
-            totalSteps.textContent = steps;
-        }
-
-        // Update counter langkah dengan animasi
-        function updateCounter(step) {
-            currentSolutionStep = step;
-            stepCounter.textContent = step;
-            
-            stepCounter.classList.add('animating');
-            setTimeout(() => {
-                stepCounter.classList.remove('animating');
-            }, 500);
-            
-            const progressPercentage = (step / totalSolutionSteps) * 100;
-            progressBar.style.width = `${progressPercentage}%`;
-        }
-
-        // Sembunyikan informasi solusi
-        function hideSolutionInfo() {
-            solutionInfo.style.display = 'none';
-        }
-
-        // Algoritma BFS untuk menyelesaikan puzzle
-        function bfsSolve(start, target) {
-            if (arraysEqual(start, target)) {
-                return [start];
+        
+        let totalSolutionSteps = 0;
+        function animateSolution(path, step) {
+            if (step >= path.length) {
+                resetSolveButton();
+                showMessage(`Puzzle berhasil diselesaikan secara otomatis dalam ${totalSolutionSteps} langkah!`, 'info');
+                solvePuzzleBtn.disabled = true;
+                hintBtn.disabled = true;
+                return;
             }
-            
+            currentPuzzle = [...path[step]];
+            renderPuzzle(currentPuzzle);
+            updateStats();
+            stepCounter.textContent = step;
+            totalSteps.textContent = totalSolutionSteps;
+            const percent = (step / totalSolutionSteps) * 100;
+            progressBar.style.width = `${percent}%`;
+            setTimeout(() => animateSolution(path, step + 1), 1100 - (animationSpeed * 100));
+        }
+        
+        function bfsSolve(start, target) {
+            if (arraysEqual(start, target)) return [start];
             const queue = [{ state: start, path: [start] }];
-            const visited = new Set();
-            visited.add(start.join(''));
-            
-            while (queue.length > 0) {
+            const visited = new Set([start.join()]);
+            while (queue.length) {
                 const { state, path } = queue.shift();
-                
-                const nextStates = getNextStates(state);
-                
-                for (const nextState of nextStates) {
-                    const nextStateKey = nextState.join('');
-                    
-                    if (!visited.has(nextStateKey)) {
-                        const newPath = [...path, nextState];
-                        
-                        if (arraysEqual(nextState, target)) {
-                            return newPath;
-                        }
-                        
-                        visited.add(nextStateKey);
-                        queue.push({ state: nextState, path: newPath });
+                for (const next of getNextStates(state)) {
+                    const key = next.join();
+                    if (!visited.has(key)) {
+                        const newPath = [...path, next];
+                        if (arraysEqual(next, target)) return newPath;
+                        visited.add(key);
+                        queue.push({ state: next, path: newPath });
                     }
                 }
             }
-            
             return [];
         }
-
-        // Dapatkan semua state berikutnya yang mungkin
+        
         function getNextStates(state) {
-            const emptyIndex = state.indexOf(0);
-            const nextStates = [];
-            
-            if (emptyIndex >= 3) {
-                const newState = [...state];
-                [newState[emptyIndex], newState[emptyIndex - 3]] = [newState[emptyIndex - 3], newState[emptyIndex]];
-                nextStates.push(newState);
-            }
-            
-            if (emptyIndex < 6) {
-                const newState = [...state];
-                [newState[emptyIndex], newState[emptyIndex + 3]] = [newState[emptyIndex + 3], newState[emptyIndex]];
-                nextStates.push(newState);
-            }
-            
-            if (emptyIndex % 3 > 0) {
-                const newState = [...state];
-                [newState[emptyIndex], newState[emptyIndex - 1]] = [newState[emptyIndex - 1], newState[emptyIndex]];
-                nextStates.push(newState);
-            }
-            
-            if (emptyIndex % 3 < 2) {
-                const newState = [...state];
-                [newState[emptyIndex], newState[emptyIndex + 1]] = [newState[emptyIndex + 1], newState[emptyIndex]];
-                nextStates.push(newState);
-            }
-            
-            return nextStates;
+            const ei = state.indexOf(0);
+            const next = [];
+            if (ei >= 3) { const s = [...state]; [s[ei], s[ei-3]] = [s[ei-3], s[ei]]; next.push(s); }
+            if (ei < 6) { const s = [...state]; [s[ei], s[ei+3]] = [s[ei+3], s[ei]]; next.push(s); }
+            if (ei % 3 > 0) { const s = [...state]; [s[ei], s[ei-1]] = [s[ei-1], s[ei]]; next.push(s); }
+            if (ei % 3 < 2) { const s = [...state]; [s[ei], s[ei+1]] = [s[ei+1], s[ei]]; next.push(s); }
+            return next;
         }
-
-        // Bandingkan dua array
-        function arraysEqual(a, b) {
-            if (a.length !== b.length) return false;
-            for (let i = 0; i < a.length; i++) {
-                if (a[i] !== b[i]) return false;
-            }
-            return true;
-        }
-
-        // Animasikan solusi
-        function animateSolution(path, stepIndex) {
-            if (stepIndex >= path.length) {
-                resetSolveButton();
-                showMessage(`Puzzle berhasil diselesaikan dalam ${totalSolutionSteps} langkah!`, 'success');
-                hintBtn.disabled = true;
-                createCelebration();
-                return;
-            }
-            
-            currentPuzzle = [...path[stepIndex]];
-            renderPuzzle(currentPuzzle);
-            updateStats();
-            
-            updateCounter(stepIndex);
-            
-            setTimeout(() => {
-                animateSolution(path, stepIndex + 1);
-            }, 1100 - (animationSpeed * 100));
-        }
-
-        // Tampilkan bantuan (langkah berikutnya)
+        
         function showHint() {
             if (isSolving) return;
-            
-            const solvable = isSolvable(currentPuzzle);
-            if (!solvable) {
-                showMessage('Puzzle ini tidak dapat diselesaikan!', 'error');
-                return;
-            }
-            
             const path = bfsSolve(currentPuzzle, TARGET_STATE);
-            
             if (path.length > 1) {
-                const nextStep = path[1];
-                
-                const emptyIndex = currentPuzzle.indexOf(0);
-                const movedIndex = nextStep.indexOf(0);
-                
-                const tileToMove = document.querySelector(`.tile[data-index="${movedIndex}"]`);
-                if (tileToMove) {
-                    const direction = getSlideDirection(movedIndex, emptyIndex);
-                    tileToMove.classList.add('moving', direction);
-                    
+                const nextState = path[1];
+                const emptyIdx = currentPuzzle.indexOf(0);
+                const movedIdx = nextState.indexOf(0);
+                const tile = document.querySelector(`.tile[data-index="${movedIdx}"]`);
+                if (tile) {
+                    const direction = getDirection(movedIdx, emptyIdx);
+                    tile.classList.add('moving', direction);
                     setTimeout(() => {
-                        currentPuzzle = [...nextStep];
-                        renderPuzzle(currentPuzzle);
+                        swapTiles(movedIdx, emptyIdx);
                         moves++;
                         updateStats();
-                        
-                        if (isPuzzleSolved()) {
-                            showMessage('Selamat! Puzzle berhasil diselesaikan!', 'success');
-                            solvePuzzleBtn.disabled = true;
-                            hintBtn.disabled = true;
-                            createCelebration();
+                        if (isPuzzleSolved() && !victoryTriggered) {
+                            victoryTriggered = true;
+                            handleVictory();
                         }
                     }, 400);
                 }
             }
         }
-
-        // Reset tombol solve
+        
         function resetSolveButton() {
             isSolving = false;
             solvePuzzleBtn.disabled = false;
             startGameBtn.disabled = false;
             hintBtn.disabled = false;
-            solveText.textContent = 'Selesaikan Otomatis';
-            solveLoading.style.display = 'none';
         }
-
-        // Reset puzzle
-        function resetPuzzle() {
-            currentPuzzle = [...TARGET_STATE];
-            renderPuzzle(currentPuzzle);
-            resetGameStats();
-            updateSolvabilityInfo();
-            solvePuzzleBtn.disabled = true;
-            hintBtn.disabled = true;
-            hideMessage();
-            resetSolveButton();
-            hideSolutionInfo();
-        }
-
-        // Hitung jumlah inversi
+        
         function calculateInversions(puzzle) {
-            const flatPuzzle = puzzle.filter(x => x !== 0);
-            let inversions = 0;
-            
-            for (let i = 0; i < flatPuzzle.length; i++) {
-                for (let j = i + 1; j < flatPuzzle.length; j++) {
-                    if (flatPuzzle[i] > flatPuzzle[j]) {
-                        inversions++;
-                    }
-                }
-            }
-            
-            return inversions;
+            const flat = puzzle.filter(x => x !== 0);
+            let inv = 0;
+            for (let i = 0; i < flat.length; i++)
+                for (let j = i+1; j < flat.length; j++)
+                    if (flat[i] > flat[j]) inv++;
+            return inv;
         }
-
-        // Cek apakah puzzle dapat diselesaikan
-        function isSolvable(puzzle) {
-            const inversions = calculateInversions(puzzle);
-            return inversions % 2 === 0;
-        }
-
-        // Update info solvabilitas
+        
+        function isSolvable(puzzle) { return calculateInversions(puzzle) % 2 === 0; }
+        
         function updateSolvabilityInfo() {
-            const inversions = calculateInversions(currentPuzzle);
-            const solvable = isSolvable(currentPuzzle);
-            
-            inversionsInfo.textContent = `Inversi: ${inversions}`;
-            solvabilityInfo.textContent = `Status: ${solvable ? 'Dapat Diselesaikan' : 'Tidak Dapat Diselesaikan'}`;
-            solvabilityInfo.style.color = solvable ? 'green' : 'red';
+            const inv = calculateInversions(currentPuzzle);
+            inversionsInfo.textContent = `Inversi: ${inv}`;
+            solvabilityInfo.textContent = `Status: ${inv % 2 === 0 ? '✅ Dapat Diselesaikan' : '❌ Tidak Dapat Diselesaikan'}`;
+            solvabilityInfo.style.color = inv % 2 === 0 ? 'green' : 'red';
         }
-
-        // Update statistik
+        
         function updateStats() {
             movesInfo.textContent = `Langkah: ${moves}`;
-            
-            statsContainer.classList.add('updated');
-            setTimeout(() => {
-                statsContainer.classList.remove('updated');
-            }, 500);
-        }
-
-        // Reset statistik permainan
-        function resetGameStats() {
-            moves = 0;
-            startTime = Date.now();
-            updateStats();
             updateSolvabilityInfo();
         }
-
-        // Update kecepatan animasi
-        function updateAnimationSpeed() {
-            animationSpeed = parseInt(animationSpeedSlider.value);
-            speedValue.textContent = animationSpeed;
-        }
-
-        // Tampilkan pesan
-        function showMessage(message, type) {
-            messageContainer.textContent = message;
+        
+        function resetGameStats() { moves = 0; updateStats(); }
+        
+        function arraysEqual(a, b) { return a.length === b.length && a.every((v,i) => v === b[i]); }
+        
+        function showMessage(msg, type) {
+            messageContainer.textContent = msg;
             messageContainer.className = `message ${type}`;
             messageContainer.classList.add('show');
-            
-            setTimeout(() => {
-                hideMessage();
-            }, 5000);
+            setTimeout(() => messageContainer.classList.remove('show'), 4000);
         }
-
-        // Sembunyikan pesan
-        function hideMessage() {
-            messageContainer.classList.remove('show');
+        
+        // Efek perayaan tambahan
+        const balloonColors = ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2', '#EF476F', '#FF9A76', '#7BC950'];
+        
+        function createQuickConfetti() {
+            const container = document.querySelector('.container');
+            for (let i = 0; i < 60; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    container.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 2000);
+                }, i * 50);
+            }
         }
+        
+        function createBalloons() {
+            const balloonCount = 35;
+            const containerWidth = window.innerWidth;
+            for (let i = 0; i < balloonCount; i++) {
+                setTimeout(() => {
+                    const balloon = document.createElement('div');
+                    balloon.className = 'balloon';
+                    balloon.style.backgroundColor = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+                    const size = 35 + Math.random() * 40;
+                    balloon.style.width = `${size}px`;
+                    balloon.style.height = `${size * 1.2}px`;
+                    balloon.style.left = `${Math.random() * containerWidth}px`;
+                    const duration = 10 + Math.random() * 8;
+                    balloon.style.animation = `balloonFloat ${duration}s linear forwards`;
+                    document.body.appendChild(balloon);
+                    setTimeout(() => balloon.remove(), duration * 1000);
+                }, i * 100);
+            }
+        }
+        
+        updateStats();
     </script>
 </body>
 </html>
